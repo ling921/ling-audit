@@ -1,0 +1,53 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net6.0;net7.0;</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <PackageOutputPath>.nuget</PackageOutputPath>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <Description>An extension library that can automatically record entity changes of Microsoft.EntityFrameworkCore.</Description>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Authors>LingDev</Authors>
+    <Title>LingDev.EntityFrameworkCore.Audit</Title>
+    <Product>LingDev.EntityFrameworkCore.Audit</Product>
+    <PackageId>LingDev.EntityFrameworkCore.Audit</PackageId>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageTags>lingdev;ef;efcore;entityframework;entityframeworkcore;audit;</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>Please Check [Release Notes](https://github.com/ling921/LingDev.EntityFrameworkCore.Audit/blob/master/src/LingDev.EntityFrameworkCore.Audit/RELEASE.md)</PackageReleaseNotes>
+    <Copyright>Copyright © 2022 LingDev.com All rights reserved.</Copyright>
+    <NeutralLanguage>en</NeutralLanguage>
+    <license>https://raw.githubusercontent.com/ling921/LingDev.EntityFrameworkCore.Audit/master/LICENSE</license>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ling921/LingDev.EntityFrameworkCore.Audit</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ling921/LingDev.EntityFrameworkCore.Audit</RepositoryUrl>
+    <RepositoryType>Github</RepositoryType>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net7.0' ">
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\resources\icon.png" Link="icon.png" Pack="true" PackagePath="\" />
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="RELEASE.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>
