@@ -1,4 +1,4 @@
-# LingDev.EntityFrameworkCore.Audit
+# Ling.EntityFrameworkCore.Audit
 
 One Paragraph of the project description
 
@@ -54,8 +54,8 @@ repository](https://github.com/ling921/a-good-readme-template/tags).
 
 ## Authors
 
-  - **LingDev** - *Provided README Template* -
-    [LingDev](https://github.com/ling921)
+  - **Ling** - *Provided README Template* -
+    [Ling](https://github.com/ling921)
 
 See also the list of
 [contributors](https://github.com/ling921/a-good-readme-template/contributors)
