@@ -19,12 +19,12 @@ dotnet add package Ling.EFCore.Audit
 Add `UseAudit()` in your `DbContext` service registration code.
 
 ```csharp
-// In Program.cs
+// in Program.cs
 builder.Services.Addxxx<xxDbContext>(
     connectionString,
     optionsAction: options => options.UseAudit());
 
-// In Startup.cs
+// in Startup.cs
 services.Addxxx<xxDbContext>(
     connectionString,
     optionsAction: options => options.UseAudit());

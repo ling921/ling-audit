@@ -6,10 +6,10 @@
 
 	<PropertyGroup>
 		<PackageId>Ling.Audit</PackageId>
-		<PackageVersion>0.1.0-beta.202212111827</PackageVersion>
+		<PackageVersion>0.1.0-beta.202212112056</PackageVersion>
 		<Description>A source generator for audit properties.</Description>
-		<PackageTags>Ling;audit;sourcegenerator;</PackageTags>
-		<PackageReleaseNotes>Please Check https://github.com/ling921/Ling.EntityFrameworkCore.Audit/blob/master/src/Ling.Audit/RELEASE.md</PackageReleaseNotes>
+		<PackageTags>ling;audit;sourcegenerator;</PackageTags>
+		<PackageReleaseNotes>Please Check https://github.com/ling921/ling-audit/blob/master/src/Ling.Audit/RELEASE.md</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>

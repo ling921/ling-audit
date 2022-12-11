@@ -5,11 +5,11 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<PackageId>Ling.EntityFrameworkCore.Audit</PackageId>
-		<PackageVersion>0.1.0-beta.202212112011</PackageVersion>
-		<Description>An extension library that can automatically record entity changes of Microsoft.EntityFrameworkCore.</Description>
-		<PackageTags>Ling;ef;efcore;entityframework;entityframeworkcore;audit;</PackageTags>
-		<PackageReleaseNotes>Please Check https://github.com/ling921/Ling.EntityFrameworkCore.Audit/blob/master/src/Ling.EntityFrameworkCore.Audit/RELEASE.md</PackageReleaseNotes>
+		<PackageId>Ling.EFCore.Audit</PackageId>
+		<PackageVersion>0.1.0-beta.202212112056</PackageVersion>
+		<Description>An extension library that can automatically record entity changes of Microsoft.EFCore.</Description>
+		<PackageTags>ling;ef;efcore;entityframework;entityframeworkcore;audit;</PackageTags>
+		<PackageReleaseNotes>Please Check https://github.com/ling921/ling-audit/blob/master/src/Ling.EFCore.Audit/RELEASE.md</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
