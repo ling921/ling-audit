@@ -1,4 +1,6 @@
-﻿using LingDev.EntityFrameworkCore.Audit.Internal;
+﻿using LingDev.EntityFrameworkCore.Audit;
+using LingDev.EntityFrameworkCore.Audit.Extensions;
+using LingDev.EntityFrameworkCore.Audit.Internal;
 using LingDev.EntityFrameworkCore.Audit.Internal.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -7,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
-namespace LingDev.EntityFrameworkCore.Audit.Extensions;
+namespace LingDev.EntityFrameworkCore.Extensions;
 
 /// <summary>
 /// Extension methods for building model.

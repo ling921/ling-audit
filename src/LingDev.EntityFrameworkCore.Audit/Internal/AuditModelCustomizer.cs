@@ -1,6 +1,6 @@
-﻿using LingDev.EntityFrameworkCore.Audit.Extensions;
-using LingDev.EntityFrameworkCore.Audit.Internal.Extensions;
+﻿using LingDev.EntityFrameworkCore.Audit.Internal.Extensions;
 using LingDev.EntityFrameworkCore.Audit.TypeConfigurations;
+using LingDev.EntityFrameworkCore.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;

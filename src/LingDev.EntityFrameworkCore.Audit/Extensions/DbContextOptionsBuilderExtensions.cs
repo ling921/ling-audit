@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
-namespace LingDev.DependencyInjection;
+namespace LingDev.EntityFrameworkCore.Extensions;
 
 /// <summary>
 /// Extension methods for <see cref="DbContextOptionsBuilder"/>.

@@ -1,6 +1,7 @@
 ﻿using LingDev.EntityFrameworkCore.Audit.Extensions;
 using LingDev.EntityFrameworkCore.Audit.Internal.Models;
 using LingDev.EntityFrameworkCore.Audit.Models;
+using LingDev.EntityFrameworkCore.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
