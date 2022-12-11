@@ -1,11 +1,31 @@
-### What is this library?
+### Introduction
 
-Ling.EntityFrameworkCore.Audit is an extension library that can automatically record entity changes of `Microsoft.EntityFrameworkCore`.
+Ling.EFCore.Audit is an extension library that can automatically record entity changes of `Microsoft.EntityFrameworkCore`.
 
-### How do I get started?
+### Installation
+
+First, [install NuGet](http://docs.nuget.org/docs/start-here/installing-nuget). Then, install [Ling.EFCore.Audit](https://www.nuget.org/packages/Ling.EFCore.Audit/) from the package manager console:
+
+```
+PM> Install-Package Ling.EFCore.Audit
+```
+Or from the .NET CLI as:
+```
+dotnet add package Ling.EFCore.Audit
+```
+
+### Usage
+
+Add `UseAudit()` in your `DbContext` service registration code.
 
 ```csharp
+// In Program.cs
 builder.Services.Addxxx<xxDbContext>(
+    connectionString,
+    optionsAction: options => options.UseAudit());
+
+// In Startup.cs
+services.Addxxx<xxDbContext>(
     connectionString,
     optionsAction: options => options.UseAudit());
 ```

@@ -1,4 +1,4 @@
-# Ling.EntityFrameworkCore.Audit
+# Ling.Audit
 
 One Paragraph of the project description
 
