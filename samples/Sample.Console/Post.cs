@@ -2,6 +2,13 @@
 
 namespace Sample.Console;
 
-public partial class Post : IFullAudited<int?>
+public partial class Post :
+    IHasCreator<int?>,
+    IHasCreationTime,
+    IHasLastModifier<int?>,
+    IHasLastModificationTime,
+    ISoftDelete,
+    IHasDeleter<int?>,
+    IHasDeletionTime
 {
 }

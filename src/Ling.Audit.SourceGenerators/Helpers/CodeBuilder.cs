@@ -27,7 +27,9 @@ internal sealed class CodeBuilder
     /// Initializes a new instance of the <see cref="CodeBuilder"/> class.
     /// </summary>
     /// <param name="indentSize">The size of the indentation. Default is 4.</param>
-    /// <exception cref="ArgumentOutOfRangeException">If <paramref name="indentSize"/> is less than or equal to 0.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// If <paramref name="indentSize"/> is less than or equal to 0.
+    /// </exception>
     public CodeBuilder(int indentSize = 4)
     {
         if (indentSize <= 0) throw new ArgumentOutOfRangeException(nameof(indentSize));
@@ -44,7 +46,9 @@ internal sealed class CodeBuilder
     /// </summary>
     /// <param name="value">The initial value of the code builder.</param>
     /// <param name="indentSize">The size of the indentation. Default is 4.</param>
-    /// <exception cref="ArgumentOutOfRangeException">If <paramref name="indentSize"/> is less than or equal to 0.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// If <paramref name="indentSize"/> is less than or equal to 0.
+    /// </exception>
     public CodeBuilder(string value, int indentSize = 4)
     {
         if (indentSize <= 0) throw new ArgumentOutOfRangeException(nameof(indentSize));
@@ -72,9 +76,13 @@ internal sealed class CodeBuilder
     /// Appends a closing brace to the code builder.
     /// </summary>
     /// <param name="textAfterBrace">Optional text to append after the closing brace, e.g. ')'.</param>
-    /// <param name="appendSemicolon">Indicates whether to append a semicolon after the closing brace.</param>
+    /// <param name="appendSemicolon">
+    /// Indicates whether to append a semicolon after the closing brace.
+    /// </param>
     /// <returns>The same instance for chaining.</returns>
-    /// <exception cref="InvalidOperationException">If the indent level is less than or equal to 0.</exception>
+    /// <exception cref="InvalidOperationException">
+    /// If the indent level is less than or equal to 0.
+    /// </exception>
     public CodeBuilder CloseBrace(string? textAfterBrace = null, bool appendSemicolon = false)
     {
         if (_indentLevel <= 0) throw new InvalidOperationException();
@@ -184,7 +192,9 @@ internal sealed class CodeBuilder
     /// Decreases the indent level by one.
     /// </summary>
     /// <returns>The same instance for chaining.</returns>
-    /// <exception cref="InvalidOperationException">If the indent level is less than or equal to 0.</exception>
+    /// <exception cref="InvalidOperationException">
+    /// If the indent level is less than or equal to 0.
+    /// </exception>
     public CodeBuilder DecreaseIndentLevel()
     {
         if (_indentLevel <= 0) throw new InvalidOperationException();
@@ -204,9 +214,7 @@ internal sealed class CodeBuilder
 
     /// <summary>
     /// Returns the code builder as a string.
-    /// <para>
-    /// If there are unclosed braces in the code builder, they will be all closed.
-    /// </para>
+    /// <para>If there are unclosed braces in the code builder, they will be all closed.</para>
     /// </summary>
     /// <returns>The code text.</returns>
     public override string ToString()

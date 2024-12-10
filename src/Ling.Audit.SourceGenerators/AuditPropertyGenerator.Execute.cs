@@ -33,11 +33,16 @@ partial class AuditPropertyGenerator
             .AppendFormatLine("partial class {0}", classDeclaration.Identifier.Text)
             .OpenBrace();
 
+        var index = 0;
         foreach (var property in properties)
         {
-            cb.AppendFormatLine("/// <inheritdoc cref=\"global::{0}\" />", property.InterfaceName.Replace('<', '{').Replace('>', '}'))
-                .AppendFormatLine("public {0} {1} {{ get; set; }}", property.PropertyType, property.PropertyName)
-                .AppendLine();
+            cb.AppendFormatLine("/// <inheritdoc cref=\"global::{0}\" />", property.InterfaceName.Replace("`1", "{TKey}"))
+                .AppendFormatLine("public virtual {0} {1} {{ get; set; }}", property.PropertyType, property.PropertyName);
+
+            if (++index < properties.Count)
+            {
+                cb.AppendLine();
+            }
         }
 
         cb.CloseAllBrace();

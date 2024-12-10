@@ -9,7 +9,7 @@ namespace Ling.Audit.SourceGenerators;
 [Generator(LanguageNames.CSharp)]
 public sealed partial class AuditPropertyGenerator : IIncrementalGenerator
 {
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var classDeclarations = context.SyntaxProvider

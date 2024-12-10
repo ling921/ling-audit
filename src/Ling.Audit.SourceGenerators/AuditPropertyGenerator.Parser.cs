@@ -5,16 +5,7 @@ namespace Ling.Audit.SourceGenerators;
 
 partial class AuditPropertyGenerator
 {
-    private static bool IsSyntaxTargetForGeneration(SyntaxNode node)
-    {
-        if (node is ClassDeclarationSyntax classDeclaration)
-        {
-            return classDeclaration.BaseList?.Types.Count > 0;
-        }
-        return false;
-    }
-
-    private record AuditPropertyInfo(string InterfaceName, string PropertyName, string PropertyType);
+    private static bool IsSyntaxTargetForGeneration(SyntaxNode node) => node is ClassDeclarationSyntax { BaseList.Types.Count: > 0 };
 
     private static (ClassDeclarationSyntax Declaration, List<AuditPropertyInfo> Properties)? GetTargetForGeneration(GeneratorSyntaxContext context)
     {
@@ -26,6 +17,7 @@ partial class AuditPropertyGenerator
             return null;
         }
 
+        var symbols = new AuditSymbols(semanticModel.Compilation);
         var allInterfaces = classSymbol.AllInterfaces;
         var propertiesToGenerate = new List<AuditPropertyInfo>();
 
@@ -36,89 +28,73 @@ partial class AuditPropertyGenerator
 
         foreach (var @interface in allInterfaces)
         {
-            var fullName = @interface.OriginalDefinition.ToDisplayString();
+            var originalDefinition = @interface.OriginalDefinition;
 
-            switch (fullName)
+            if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasCreator) &&
+                !existingProperties.Contains(AuditDefaults.CreatedBy))
             {
-                case AuditDefaults.CreatedByTypeDef:
-                    if (!existingProperties.Contains(AuditDefaults.CreatedBy))
-                    {
-                        var keyType = GetPropertyTypeForTKey(@interface.TypeArguments[0]);
-                        propertiesToGenerate.Add(new AuditPropertyInfo(
-                            fullName,
-                            AuditDefaults.CreatedBy,
-                            keyType
-                        ));
-                    }
-                    break;
-
-                case AuditDefaults.CreatedAtTypeDef:
-                    if (!existingProperties.Contains(AuditDefaults.CreatedAt))
-                    {
-                        propertiesToGenerate.Add(new AuditPropertyInfo(
-                            fullName,
-                            AuditDefaults.CreatedAt,
-                            "global::System.DateTimeOffset"
-                        ));
-                    }
-                    break;
-
-                case AuditDefaults.ModifiedByTypeDef:
-                    if (!existingProperties.Contains(AuditDefaults.ModifiedBy))
-                    {
-                        var keyType = GetPropertyTypeForTKey(@interface.TypeArguments[0]);
-                        propertiesToGenerate.Add(new AuditPropertyInfo(
-                            fullName,
-                            AuditDefaults.ModifiedBy,
-                            keyType
-                        ));
-                    }
-                    break;
-
-                case AuditDefaults.ModifiedAtTypeDef:
-                    if (!existingProperties.Contains(AuditDefaults.ModifiedAt))
-                    {
-                        propertiesToGenerate.Add(new AuditPropertyInfo(
-                            fullName,
-                            AuditDefaults.ModifiedAt,
-                            "global::System.Nullable<global::System.DateTimeOffset>"
-                        ));
-                    }
-                    break;
-
-                case AuditDefaults.SoftDeleteTypeDef:
-                    if (!existingProperties.Contains(AuditDefaults.IsDeleted))
-                    {
-                        propertiesToGenerate.Add(new AuditPropertyInfo(
-                            fullName,
-                            AuditDefaults.IsDeleted,
-                            "global::System.Boolean"
-                        ));
-                    }
-                    break;
-
-                case AuditDefaults.DeletedByTypeDef:
-                    if (!existingProperties.Contains(AuditDefaults.DeletedBy))
-                    {
-                        var keyType = GetPropertyTypeForTKey(@interface.TypeArguments[0]);
-                        propertiesToGenerate.Add(new AuditPropertyInfo(
-                            fullName,
-                            AuditDefaults.DeletedBy,
-                            keyType
-                        ));
-                    }
-                    break;
-
-                case AuditDefaults.DeletedAtTypeDef:
-                    if (!existingProperties.Contains(AuditDefaults.DeletedAt))
-                    {
-                        propertiesToGenerate.Add(new AuditPropertyInfo(
-                            fullName,
-                            AuditDefaults.DeletedAt,
-                            "global::System.Nullable<global::System.DateTimeOffset>"
-                        ));
-                    }
-                    break;
+                var keyType = GetPropertyTypeForTKey(@interface.TypeArguments[0]);
+                propertiesToGenerate.Add(new AuditPropertyInfo(
+                    AuditDefaults.IHasCreatorTypeFullQualifiedName,
+                    AuditDefaults.CreatedBy,
+                    keyType
+                ));
+            }
+            else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasCreationTime) &&
+                !existingProperties.Contains(AuditDefaults.CreatedAt))
+            {
+                propertiesToGenerate.Add(new AuditPropertyInfo(
+                    AuditDefaults.IHasCreationTimeTypeFullQualifiedName,
+                    AuditDefaults.CreatedAt,
+                    "global::System.DateTimeOffset"
+                ));
+            }
+            else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasLastModifier) &&
+                !existingProperties.Contains(AuditDefaults.ModifiedBy))
+            {
+                var keyType = GetPropertyTypeForTKey(@interface.TypeArguments[0]);
+                propertiesToGenerate.Add(new AuditPropertyInfo(
+                    AuditDefaults.IHasLastModifierTypeFullQualifiedName,
+                    AuditDefaults.ModifiedBy,
+                    keyType
+                ));
+            }
+            else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasLastModificationTime) &&
+                !existingProperties.Contains(AuditDefaults.ModifiedAt))
+            {
+                propertiesToGenerate.Add(new AuditPropertyInfo(
+                    AuditDefaults.IHasLastModificationTimeTypeFullQualifiedName,
+                    AuditDefaults.ModifiedAt,
+                    "global::System.Nullable<global::System.DateTimeOffset>"
+                ));
+            }
+            else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.ISoftDelete) &&
+                !existingProperties.Contains(AuditDefaults.IsDeleted))
+            {
+                propertiesToGenerate.Add(new AuditPropertyInfo(
+                    AuditDefaults.ISoftDeleteTypeFullQualifiedName,
+                    AuditDefaults.IsDeleted,
+                    "global::System.Boolean"
+                ));
+            }
+            else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasDeleter) &&
+                !existingProperties.Contains(AuditDefaults.DeletedBy))
+            {
+                var keyType = GetPropertyTypeForTKey(@interface.TypeArguments[0]);
+                propertiesToGenerate.Add(new AuditPropertyInfo(
+                    AuditDefaults.IHasDeleterTypeFullQualifiedName,
+                    AuditDefaults.DeletedBy,
+                    keyType
+                ));
+            }
+            else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasDeletionTime) &&
+                !existingProperties.Contains(AuditDefaults.DeletedAt))
+            {
+                propertiesToGenerate.Add(new AuditPropertyInfo(
+                    AuditDefaults.IHasDeletionTimeTypeFullQualifiedName,
+                    AuditDefaults.DeletedAt,
+                    "global::System.Nullable<global::System.DateTimeOffset>"
+                ));
             }
         }
 
@@ -147,4 +123,6 @@ partial class AuditPropertyGenerator
             ? $"global::System.Nullable<{baseTypeString}>"
             : $"{baseTypeString}?";
     }
+
+    private record AuditPropertyInfo(string InterfaceName, string PropertyName, string PropertyType);
 }

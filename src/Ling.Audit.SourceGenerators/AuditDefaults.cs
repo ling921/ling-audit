@@ -2,6 +2,8 @@
 
 internal static class AuditDefaults
 {
+    public const string Namespace = "Ling.Audit";
+
     public static string Version = typeof(AuditDefaults).Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
 
     public const string CreatedBy = "CreatedBy";
@@ -12,11 +14,16 @@ internal static class AuditDefaults
     public const string DeletedBy = "DeletedBy";
     public const string DeletedAt = "DeletedAt";
 
-    public const string CreatedByTypeDef = "Ling.Audit.IHasCreator<TKey>";
-    public const string CreatedAtTypeDef = "Ling.Audit.IHasCreationTime";
-    public const string ModifiedByTypeDef = "Ling.Audit.IHasLastModifier<TKey>";
-    public const string ModifiedAtTypeDef = "Ling.Audit.IHasLastModificationTime";
-    public const string SoftDeleteTypeDef = "Ling.Audit.ISoftDelete";
-    public const string DeletedByTypeDef = "Ling.Audit.IHasDeleter<TKey>";
-    public const string DeletedAtTypeDef = "Ling.Audit.IHasDeletionTime";
+    public const string IHasCreatorTypeFullQualifiedName = $"{Namespace}.IHasCreator`1";
+    public const string IHasCreationTimeTypeFullQualifiedName = $"{Namespace}.IHasCreationTime";
+    public const string IHasLastModifierTypeFullQualifiedName = $"{Namespace}.IHasLastModifier`1";
+    public const string IHasLastModificationTimeTypeFullQualifiedName = $"{Namespace}.IHasLastModificationTime";
+    public const string ISoftDeleteTypeFullQualifiedName = $"{Namespace}.ISoftDelete";
+    public const string IHasDeleterTypeFullQualifiedName = $"{Namespace}.IHasDeleter`1";
+    public const string IHasDeletionTimeTypeFullQualifiedName = $"{Namespace}.IHasDeletionTime";
+
+    public const string ICreationAuditedTypeFullQualifiedName = $"{Namespace}.ICreationAudited`1";
+    public const string IModificationAuditedTypeFullQualifiedName = $"{Namespace}.IModificationAudited`1";
+    public const string IDeletionAuditedTypeFullQualifiedName = $"{Namespace}.IDeletionAudited`1";
+    public const string IFullAuditedTypeFullQualifiedName = $"{Namespace}.IFullAudited`1";
 }

@@ -6,9 +6,9 @@ A source generator for automatically generating audit properties in C# classes.
 
 - Automatically generates audit-related properties based on implemented interfaces
 - Supports the following audit properties:
-  - Creation info (CreatedBy, CreatedAt)
-  - Modification info (ModifiedBy, ModifiedAt)
-  - Deletion info (DeletedBy, DeletedAt, IsDeleted)
+  - Creation info (`CreatedBy`, `CreatedAt`)
+  - Modification info (`ModifiedBy`, `ModifiedAt`)
+  - Deletion info (`IsDeleted`, `DeletedBy`, `DeletedAt`)
 - Handles nullable reference types properly
 - Zero runtime dependencies
 
@@ -25,10 +25,10 @@ dotnet add package Ling.Audit
 
 ```csharp
 public partial class Post :
-    ICreatedBy<int>, // Adds CreatedBy property
-    ICreatedAt, // Adds CreatedAt property
-    IModifiedBy<int>, // Adds ModifiedBy property
-    IModifiedAt, // Adds ModifiedAt property
+    IHasCreator<int>, // Adds CreatedBy property
+    IHasCreationTime, // Adds CreatedAt property
+    IHasModifier<int>, // Adds ModifiedBy property
+    IHasModificationTime, // Adds ModifiedAt property
     ISoftDelete, // Adds IsDeleted property
     IHasDeleter<int>, // Adds DeletedBy and DeletedAt properties
     IHasDeletionTime // Adds DeletedAt property
@@ -56,17 +56,17 @@ partial class Post
 
 ## Supported Interfaces
 
-- `ICreatedBy<TKey>` - Adds `CreatedBy` property
-- `ICreatedAt` - Adds `CreatedAt` property
-- `IModifiedBy<TKey>` - Adds `ModifiedBy` property
-- `IModifiedAt` - Adds `ModifiedAt` property
+- `IHasCreator<TKey>` - Adds `CreatedBy` property
+- `IHasCreationTime` - Adds `CreatedAt` property
+- `IHasModifier<TKey>` - Adds `ModifiedBy` property
+- `IHasModificationTime` - Adds `ModifiedAt` property
 - `ISoftDelete` - Adds `IsDeleted` property
 - `IHasDeleter<TKey>` - Adds `DeletedBy` and `DeletedAt` properties
 - `IHasDeletionTime` - Adds `DeletedAt` property
 - `ICreationAudited<TKey>` - Adds `CreatedBy` and `CreatedAt` properties
 - `IModificationAudited<TKey>` - Adds `ModifiedBy` and `ModifiedAt` properties
-- `IDeletionAudited<TKey>` - Adds `DeletedBy` and `DeletedAt` properties
-- `IAudited<TKey>` - Adds `CreatedBy`, `CreatedAt`, `ModifiedBy`, `ModifiedAt`, `DeletedBy`, `DeletedAt`, and `IsDeleted` properties
+- `IDeletionAudited<TKey>` - Adds `IsDeleted`, `DeletedBy` and `DeletedAt` properties
+- `IFullAudited<TKey>` - Adds `CreatedBy`, `CreatedAt`, `ModifiedBy`, `ModifiedAt`, `IsDeleted`, `DeletedBy` and `DeletedAt` properties
 
 ## License
 
