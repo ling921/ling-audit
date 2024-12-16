@@ -1,7 +1,7 @@
 namespace Ling.Audit;
 
 /// <summary>
-/// Defines the soft delete property.
+/// Defines an object that tracks soft delete information.
 /// </summary>
 public interface ISoftDelete
 {

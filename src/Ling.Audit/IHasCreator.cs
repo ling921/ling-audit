@@ -1,13 +1,19 @@
 ﻿namespace Ling.Audit;
 
 /// <summary>
-/// Defines the creator property.
+/// Defines an object that tracks creator information.
 /// </summary>
 /// <typeparam name="TKey">The type of the creator identifier.</typeparam>
-public interface IHasCreator<TKey>
+public interface IHasCreator<TKey>;
+
+/// <summary>
+/// Defines an object that tracks creator information.
+/// </summary>
+/// <typeparam name="TKey">The type of the creator identifier.</typeparam>
+public interface IHasCreationUser<TKey>
 {
     /// <summary>
-    /// Gets or sets the creator identifier.
+    /// Gets or sets the identifier of the creator.
     /// </summary>
-    TKey? CreatedBy { get; set; }
+    TKey CreatedBy { get; set; }
 }

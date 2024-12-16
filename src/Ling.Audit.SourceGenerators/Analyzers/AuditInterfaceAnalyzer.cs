@@ -1,4 +1,5 @@
 using Ling.Audit.SourceGenerators.Diagnostics;
+using Ling.Audit.SourceGenerators.Helpers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -36,10 +37,22 @@ public class AuditInterfaceAnalyzer : DiagnosticAnalyzer
         }
 
         var symbols = new AuditSymbols(semanticModel.Compilation);
+        var directlyImplementedInterfaces = baseTypes
+            .Select(t => semanticModel.GetTypeInfo(t.Type, context.CancellationToken).Type)
+            .OfType<INamedTypeSymbol>()
+            .Where(t => t.TypeKind == TypeKind.Interface)
+            .ToList();
 
-        if (HasInterface(typeSymbol, symbols.IHasCreator) &&
-            HasInterface(typeSymbol, symbols.IHasCreationTime) &&
-            !HasInterface(typeSymbol, symbols.ICreationAudited))
+        bool HasDirectlyImplemented(INamedTypeSymbol interfaceSymbol, out INamedTypeSymbol? implementedInterface)
+        {
+            implementedInterface = directlyImplementedInterfaces.FirstOrDefault(i =>
+                SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, interfaceSymbol));
+            return implementedInterface != null;
+        }
+
+        if (HasDirectlyImplemented(symbols.IHasCreator, out _) &&
+            HasDirectlyImplemented(symbols.IHasCreationTime, out _) &&
+            !HasDirectlyImplemented(symbols.ICreationAudited, out _))
         {
             var lastInterface = baseTypes
                 .LastOrDefault(t => IsTargetInterface(t, semanticModel,
@@ -55,9 +68,9 @@ public class AuditInterfaceAnalyzer : DiagnosticAnalyzer
             }
         }
 
-        if (HasInterface(typeSymbol, symbols.IHasLastModifier) &&
-            HasInterface(typeSymbol, symbols.IHasLastModificationTime) &&
-            !HasInterface(typeSymbol, symbols.IModificationAudited))
+        if (HasDirectlyImplemented(symbols.IHasLastModifier, out _) &&
+            HasDirectlyImplemented(symbols.IHasLastModificationTime, out _) &&
+            !HasDirectlyImplemented(symbols.IModificationAudited, out _))
         {
             var lastInterface = baseTypes
                 .LastOrDefault(t => IsTargetInterface(t, semanticModel,
@@ -73,10 +86,10 @@ public class AuditInterfaceAnalyzer : DiagnosticAnalyzer
             }
         }
 
-        if (HasInterface(typeSymbol, symbols.ISoftDelete) &&
-            HasInterface(typeSymbol, symbols.IHasDeleter) &&
-            HasInterface(typeSymbol, symbols.IHasDeletionTime) &&
-            !HasInterface(typeSymbol, symbols.IDeletionAudited))
+        if (HasDirectlyImplemented(symbols.ISoftDelete, out _) &&
+            HasDirectlyImplemented(symbols.IHasDeleter, out _) &&
+            HasDirectlyImplemented(symbols.IHasDeletionTime, out _) &&
+            !HasDirectlyImplemented(symbols.IDeletionAudited, out _))
         {
             var lastInterface = baseTypes
                 .LastOrDefault(t => IsTargetInterface(t, semanticModel,
@@ -92,10 +105,11 @@ public class AuditInterfaceAnalyzer : DiagnosticAnalyzer
             }
         }
 
-        if (HasInterface(typeSymbol, symbols.ICreationAudited) &&
-            HasInterface(typeSymbol, symbols.IModificationAudited) &&
-            HasInterface(typeSymbol, symbols.IDeletionAudited) &&
-            !HasInterface(typeSymbol, symbols.IFullAudited))
+        if (HasDirectlyImplemented(symbols.ICreationAudited, out var creationAudited) &&
+            HasDirectlyImplemented(symbols.IModificationAudited, out var modificationAudited) &&
+            HasDirectlyImplemented(symbols.IDeletionAudited, out var deletionAudited) &&
+            !HasDirectlyImplemented(symbols.IFullAudited, out _) &&
+            HasConsistentGenericParameters(creationAudited, modificationAudited, deletionAudited))
         {
             var lastInterface = baseTypes
                 .LastOrDefault(t => IsTargetInterface(t, semanticModel,
@@ -112,12 +126,6 @@ public class AuditInterfaceAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    private static bool HasInterface(INamedTypeSymbol typeSymbol, INamedTypeSymbol? interfaceSymbol)
-    {
-        return interfaceSymbol != null &&
-            typeSymbol.AllInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, interfaceSymbol));
-    }
-
     private static bool IsTargetInterface(BaseTypeSyntax baseType, SemanticModel semanticModel, params INamedTypeSymbol?[] targetSymbols)
     {
         if (semanticModel.GetTypeInfo(baseType.Type).Type is not INamedTypeSymbol typeSymbol)
@@ -128,5 +136,25 @@ public class AuditInterfaceAnalyzer : DiagnosticAnalyzer
         return targetSymbols.Any(target =>
             target != null &&
             SymbolEqualityComparer.Default.Equals(typeSymbol.OriginalDefinition, target));
+    }
+
+    private static bool HasConsistentGenericParameters(
+        INamedTypeSymbol? creationAudited,
+        INamedTypeSymbol? modificationAudited,
+        INamedTypeSymbol? deletionAudited)
+    {
+        if (creationAudited == null || modificationAudited == null || deletionAudited == null)
+            return false;
+
+        var creationKey = creationAudited.TypeArguments.FirstOrDefault();
+        var modificationKey = modificationAudited.TypeArguments.FirstOrDefault();
+        var deletionKey = deletionAudited.TypeArguments.FirstOrDefault();
+
+        if (creationKey == null || modificationKey == null || deletionKey == null)
+            return false;
+
+        var comparer = new UnderlyingSymbolEqualityComparer();
+        return comparer.Equals(creationKey, modificationKey) &&
+               comparer.Equals(modificationKey, deletionKey);
     }
 }

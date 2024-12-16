@@ -2,9 +2,55 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <LangVersion>latest</LangVersion>
-    <Nullable>enable</Nullable>
+    <IsAotCompatible>true</IsAotCompatible>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageOutputPath>.nuget</PackageOutputPath>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
+
+  <!-- Package Settings -->
+  <PropertyGroup>
+    <PackageId>Ling.Audit</PackageId>
+    <Authors>ling921</Authors>
+    <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ling921/ling-audit</RepositoryUrl>
+    <Description></Description>
+    <PackageReleaseNotes>Summary of changes made in this release of the package.</PackageReleaseNotes>
+    <Copyright>Copyright © 2024- ling921 All rights reserved.</Copyright>
+    <PackageTags>ling, audit, source-generation, analyzers, codefixes</PackageTags>
+    <NoPackageAnalysis>true</NoPackageAnalysis>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddToOutput</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+
+  <!-- GitHub SourceLink -->
+  <PropertyGroup>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ling.Audit.SourceGenerators\Ling.Audit.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <Target Name="_AddToOutput" BeforeTargets="GetTargetPath">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(ProjectDir)..\Ling.Audit.SourceGenerators\bin\$(Configuration)\netstandard2.0\Ling.Audit.SourceGenerators.dll" PackagePath="analyzers/dotnet/cs" />
+    </ItemGroup>
+  </Target>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\assets\icon.png" Visible="false" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
 </Project>

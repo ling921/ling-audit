@@ -28,15 +28,29 @@ partial class AuditPropertyGenerator
                 .OpenBrace();
         }
 
+        var classIdentifierWithInheritance = classDeclaration.Identifier.Text + GetInheritanceString(properties);
+
         cb.AppendFormatLine("[global::System.CodeDom.Compiler.GeneratedCode(\"Ling.Audit.SourceGenerators\", \"{0}\")]", AuditDefaults.Version)
             .AppendLine("[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]")
-            .AppendFormatLine("partial class {0}", classDeclaration.Identifier.Text)
+            .AppendFormatLine("partial class {0}", classIdentifierWithInheritance)
             .OpenBrace();
 
         var index = 0;
         foreach (var property in properties)
         {
-            cb.AppendFormatLine("/// <inheritdoc cref=\"global::{0}\" />", property.InterfaceName.Replace("`1", "{TKey}"))
+            var inheritDocClass = property.PropertyName switch
+            {
+                AuditDefaults.CreatedBy => AuditDefaults.IHasCreatorTypeFullQualifiedMetadataName.Replace("Creator`1", "CreationUser{TKey}"),
+                AuditDefaults.CreatedAt => AuditDefaults.IHasCreationTimeTypeFullQualifiedMetadataName,
+                AuditDefaults.ModifiedBy => AuditDefaults.IHasModifierTypeFullQualifiedMetadataName.Replace("Modifier`1", "ModificationUser{TKey}"),
+                AuditDefaults.ModifiedAt => AuditDefaults.IHasModificationTimeTypeFullQualifiedMetadataName,
+                AuditDefaults.IsDeleted => AuditDefaults.ISoftDeleteTypeFullQualifiedMetadataName,
+                AuditDefaults.DeletedBy => AuditDefaults.IHasDeleterTypeFullQualifiedMetadataName.Replace("Deleter`1", "DeletionUser{TKey}"),
+                AuditDefaults.DeletedAt => AuditDefaults.IHasDeletionTimeTypeFullQualifiedMetadataName,
+                _ => string.Empty,
+            };
+
+            cb.AppendFormatLine("/// <inheritdoc cref=\"global::{0}.{1}\"/>", inheritDocClass, property.PropertyName)
                 .AppendFormatLine("public virtual {0} {1} {{ get; set; }}", property.PropertyType, property.PropertyName);
 
             if (++index < properties.Count)
@@ -83,5 +97,24 @@ partial class AuditPropertyGenerator
         }
 
         return (namespaceName, types);
+    }
+
+    private static string GetInheritanceString(List<AuditPropertyInfo> properties)
+    {
+        var inheritanceTypes = new[]
+        {
+            (PropertyName: AuditDefaults.CreatedBy, InterfaceName: AuditDefaults.IHasCreatorTypeFullQualifiedMetadataName),
+            (PropertyName: AuditDefaults.ModifiedBy, InterfaceName: AuditDefaults.IHasModifierTypeFullQualifiedMetadataName),
+            (PropertyName: AuditDefaults.DeletedBy, InterfaceName: AuditDefaults.IHasDeleterTypeFullQualifiedMetadataName)
+        };
+
+        var interfaces = inheritanceTypes
+            .Select(t => properties.FirstOrDefault(p => p.PropertyName == t.PropertyName))
+            .Where(p => p != null)
+            .Select(p => "global::" + p.InterfaceName.Replace("`1", $"<{p.PropertyType}>"));
+
+        return interfaces.Any()
+            ? " : " + string.Join(", ", interfaces)
+            : string.Empty;
     }
 }

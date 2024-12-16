@@ -1,7 +1,7 @@
 namespace Ling.Audit;
 
 /// <summary>
-/// Defines the deletion time property.
+/// Defines an object that tracks deletion time.
 /// </summary>
 public interface IHasDeletionTime
 {

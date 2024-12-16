@@ -1,6 +1,7 @@
 namespace Ling.Audit;
 
 /// <summary>
-/// 完整的删除审计信息
+/// Defines an object that tracks deletion time and deleter information.
 /// </summary>
+/// <typeparam name="TKey">The type of the deleter identifier.</typeparam>
 public interface IDeletionAudited<TKey> : ISoftDelete, IHasDeleter<TKey>, IHasDeletionTime;

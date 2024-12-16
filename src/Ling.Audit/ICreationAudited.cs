@@ -1,6 +1,7 @@
 namespace Ling.Audit;
 
 /// <summary>
-/// 完整的创建审计信息
+/// Defines an object that tracks creation time and creator information.
 /// </summary>
+/// <typeparam name="TKey">The type of the creator identifier.</typeparam>
 public interface ICreationAudited<TKey> : IHasCreator<TKey>, IHasCreationTime;

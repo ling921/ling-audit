@@ -5,10 +5,15 @@ namespace Sample.Console;
 public partial class Post :
     IHasCreator<int?>,
     IHasCreationTime,
-    IHasLastModifier<int?>,
-    IHasLastModificationTime,
+    IHasModifier<int?>,
+    IHasModificationTime,
     ISoftDelete,
-    IHasDeleter<int?>,
+    IHasDeleter<int>,
     IHasDeletionTime
 {
+}
+
+public partial class Base : IHasCreator<int?>
+{
+
 }

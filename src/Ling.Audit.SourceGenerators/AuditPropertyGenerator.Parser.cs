@@ -34,67 +34,39 @@ partial class AuditPropertyGenerator
                 !existingProperties.Contains(AuditDefaults.CreatedBy))
             {
                 var keyType = GetPropertyTypeForTKey(@interface.TypeArguments[0]);
-                propertiesToGenerate.Add(new AuditPropertyInfo(
-                    AuditDefaults.IHasCreatorTypeFullQualifiedName,
-                    AuditDefaults.CreatedBy,
-                    keyType
-                ));
+                propertiesToGenerate.Add(AuditPropertyInfo.CreatedBy(keyType));
             }
             else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasCreationTime) &&
                 !existingProperties.Contains(AuditDefaults.CreatedAt))
             {
-                propertiesToGenerate.Add(new AuditPropertyInfo(
-                    AuditDefaults.IHasCreationTimeTypeFullQualifiedName,
-                    AuditDefaults.CreatedAt,
-                    "global::System.DateTimeOffset"
-                ));
+                propertiesToGenerate.Add(AuditPropertyInfo.CreatedAt);
             }
             else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasLastModifier) &&
                 !existingProperties.Contains(AuditDefaults.ModifiedBy))
             {
                 var keyType = GetPropertyTypeForTKey(@interface.TypeArguments[0]);
-                propertiesToGenerate.Add(new AuditPropertyInfo(
-                    AuditDefaults.IHasLastModifierTypeFullQualifiedName,
-                    AuditDefaults.ModifiedBy,
-                    keyType
-                ));
+                propertiesToGenerate.Add(AuditPropertyInfo.ModifiedBy(keyType));
             }
             else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasLastModificationTime) &&
                 !existingProperties.Contains(AuditDefaults.ModifiedAt))
             {
-                propertiesToGenerate.Add(new AuditPropertyInfo(
-                    AuditDefaults.IHasLastModificationTimeTypeFullQualifiedName,
-                    AuditDefaults.ModifiedAt,
-                    "global::System.Nullable<global::System.DateTimeOffset>"
-                ));
+                propertiesToGenerate.Add(AuditPropertyInfo.ModifiedAt);
             }
             else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.ISoftDelete) &&
                 !existingProperties.Contains(AuditDefaults.IsDeleted))
             {
-                propertiesToGenerate.Add(new AuditPropertyInfo(
-                    AuditDefaults.ISoftDeleteTypeFullQualifiedName,
-                    AuditDefaults.IsDeleted,
-                    "global::System.Boolean"
-                ));
+                propertiesToGenerate.Add(AuditPropertyInfo.IsDeleted);
             }
             else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasDeleter) &&
                 !existingProperties.Contains(AuditDefaults.DeletedBy))
             {
                 var keyType = GetPropertyTypeForTKey(@interface.TypeArguments[0]);
-                propertiesToGenerate.Add(new AuditPropertyInfo(
-                    AuditDefaults.IHasDeleterTypeFullQualifiedName,
-                    AuditDefaults.DeletedBy,
-                    keyType
-                ));
+                propertiesToGenerate.Add(AuditPropertyInfo.DeletedBy(keyType));
             }
             else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasDeletionTime) &&
                 !existingProperties.Contains(AuditDefaults.DeletedAt))
             {
-                propertiesToGenerate.Add(new AuditPropertyInfo(
-                    AuditDefaults.IHasDeletionTimeTypeFullQualifiedName,
-                    AuditDefaults.DeletedAt,
-                    "global::System.Nullable<global::System.DateTimeOffset>"
-                ));
+                propertiesToGenerate.Add(AuditPropertyInfo.DeletedAt);
             }
         }
 
@@ -124,5 +96,51 @@ partial class AuditPropertyGenerator
             : $"{baseTypeString}?";
     }
 
-    private record AuditPropertyInfo(string InterfaceName, string PropertyName, string PropertyType);
+    private record AuditPropertyInfo(
+        string InterfaceName,
+        string PropertyName,
+        string PropertyType)
+    {
+        public static AuditPropertyInfo CreatedBy(string keyType) => new(
+            AuditDefaults.IHasCreatorTypeFullQualifiedMetadataName,
+            AuditDefaults.CreatedBy,
+            keyType
+        );
+
+        public static readonly AuditPropertyInfo CreatedAt = new(
+            AuditDefaults.IHasCreationTimeTypeFullQualifiedMetadataName,
+            AuditDefaults.CreatedAt,
+            "global::System.DateTimeOffset"
+        );
+
+        public static AuditPropertyInfo ModifiedBy(string keyType) => new(
+            AuditDefaults.IHasModifierTypeFullQualifiedMetadataName,
+            AuditDefaults.ModifiedBy,
+            keyType
+        );
+
+        public static readonly AuditPropertyInfo ModifiedAt = new(
+            AuditDefaults.IHasModificationTimeTypeFullQualifiedMetadataName,
+            AuditDefaults.ModifiedAt,
+            "global::System.Nullable<global::System.DateTimeOffset>"
+        );
+
+        public static readonly AuditPropertyInfo IsDeleted = new(
+            AuditDefaults.ISoftDeleteTypeFullQualifiedMetadataName,
+            AuditDefaults.IsDeleted,
+            "global::System.Boolean"
+        );
+
+        public static AuditPropertyInfo DeletedBy(string keyType) => new(
+            AuditDefaults.IHasDeleterTypeFullQualifiedMetadataName,
+            AuditDefaults.DeletedBy,
+            keyType
+        );
+
+        public static readonly AuditPropertyInfo DeletedAt = new(
+            AuditDefaults.IHasDeletionTimeTypeFullQualifiedMetadataName,
+            AuditDefaults.DeletedAt,
+            "global::System.Nullable<global::System.DateTimeOffset>"
+        );
+    }
 }

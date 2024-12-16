@@ -1,9 +1,9 @@
 namespace Ling.Audit;
 
 /// <summary>
-/// Defines the last modification time property.
+/// Defines an object that tracks last modification time.
 /// </summary>
-public interface IHasLastModificationTime
+public interface IHasModificationTime
 {
     /// <summary>
     /// Gets or sets the last modification time.

@@ -14,16 +14,16 @@ internal static class AuditDefaults
     public const string DeletedBy = "DeletedBy";
     public const string DeletedAt = "DeletedAt";
 
-    public const string IHasCreatorTypeFullQualifiedName = $"{Namespace}.IHasCreator`1";
-    public const string IHasCreationTimeTypeFullQualifiedName = $"{Namespace}.IHasCreationTime";
-    public const string IHasLastModifierTypeFullQualifiedName = $"{Namespace}.IHasLastModifier`1";
-    public const string IHasLastModificationTimeTypeFullQualifiedName = $"{Namespace}.IHasLastModificationTime";
-    public const string ISoftDeleteTypeFullQualifiedName = $"{Namespace}.ISoftDelete";
-    public const string IHasDeleterTypeFullQualifiedName = $"{Namespace}.IHasDeleter`1";
-    public const string IHasDeletionTimeTypeFullQualifiedName = $"{Namespace}.IHasDeletionTime";
+    public const string IHasCreatorTypeFullQualifiedMetadataName = $"{Namespace}.IHasCreator`1";
+    public const string IHasCreationTimeTypeFullQualifiedMetadataName = $"{Namespace}.IHasCreationTime";
+    public const string IHasModifierTypeFullQualifiedMetadataName = $"{Namespace}.IHasModifier`1";
+    public const string IHasModificationTimeTypeFullQualifiedMetadataName = $"{Namespace}.IHasModificationTime";
+    public const string ISoftDeleteTypeFullQualifiedMetadataName = $"{Namespace}.ISoftDelete";
+    public const string IHasDeleterTypeFullQualifiedMetadataName = $"{Namespace}.IHasDeleter`1";
+    public const string IHasDeletionTimeTypeFullQualifiedMetadataName = $"{Namespace}.IHasDeletionTime";
 
-    public const string ICreationAuditedTypeFullQualifiedName = $"{Namespace}.ICreationAudited`1";
-    public const string IModificationAuditedTypeFullQualifiedName = $"{Namespace}.IModificationAudited`1";
-    public const string IDeletionAuditedTypeFullQualifiedName = $"{Namespace}.IDeletionAudited`1";
-    public const string IFullAuditedTypeFullQualifiedName = $"{Namespace}.IFullAudited`1";
+    public const string ICreationAuditedTypeFullQualifiedMetadataName = $"{Namespace}.ICreationAudited`1";
+    public const string IModificationAuditedTypeFullQualifiedMetadataName = $"{Namespace}.IModificationAudited`1";
+    public const string IDeletionAuditedTypeFullQualifiedMetadataName = $"{Namespace}.IDeletionAudited`1";
+    public const string IFullAuditedTypeFullQualifiedMetadataName = $"{Namespace}.IFullAudited`1";
 }

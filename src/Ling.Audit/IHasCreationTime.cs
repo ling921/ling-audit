@@ -1,7 +1,7 @@
 namespace Ling.Audit;
 
 /// <summary>
-/// Defines the creation time property.
+/// Defines an object that tracks creation time.
 /// </summary>
 public interface IHasCreationTime
 {
