@@ -12,47 +12,36 @@ internal static class DiagnosticDescriptors
     #region Diagnostic IDs
 
     /// <summary>
-    /// Diagnostic ID for <see cref="ValueType"/>: audit not supported on value types
+    /// Diagnostic ID for <see cref="ValueType"/>: Audit operations are not supported on value types
     /// </summary>
     public const string ValueTypeId = "LA001";
 
     /// <summary>
-    /// Diagnostic ID for <see cref="PartialType"/>: type must be declared as partial
+    /// Diagnostic ID for <see cref="PartialType"/>: Type must be declared as partial to support audit operations
     /// </summary>
     public const string PartialTypeId = "LA002";
 
     /// <summary>
-    /// Diagnostic ID for <see cref="KeyTypeMismatch"/>: key type mismatch in audit interfaces
+    /// Diagnostic ID for <see cref="KeyTypeMismatch"/>: Key type mismatch detected between multiple audit interfaces
     /// </summary>
     public const string KeyTypeMismatchId = "LA003";
 
     /// <summary>
-    /// Diagnostic ID for <see cref="UseCreationAudited"/>: suggesting to use ICreationAudited interface
+    /// Diagnostic ID for <see cref="UseAuditedInterface"/>: Suggestion to use a more comprehensive audit interface
     /// </summary>
-    public const string UseCreationAuditedId = "LA901";
+    public const string UseAuditedInterfaceId = "LA901";
 
     /// <summary>
-    /// Diagnostic ID for <see cref="UseModificationAudited"/>: suggesting to use
-    /// IModificationAudited interface
+    /// Diagnostic ID for <see cref="UseNonPropertyInterface"/>: Suggestion to use method-based audit interface instead of property-based interface
     /// </summary>
-    public const string UseModificationAuditedId = "LA902";
-
-    /// <summary>
-    /// Diagnostic ID for <see cref="UseDeletionAudited"/>: suggesting to use IDeletionAudited interface
-    /// </summary>
-    public const string UseDeletionAuditedId = "LA903";
-
-    /// <summary>
-    /// Diagnostic ID for <see cref="UseFullAudited"/>: suggesting to use IFullAudited interface
-    /// </summary>
-    public const string UseFullAuditedId = "LA904";
+    public const string UseNonPropertyInterfaceId = "LA902";
 
     #endregion Diagnostic IDs
 
     #region Rules
 
     /// <summary>
-    /// Diagnostic rule for audit not supported on value types.
+    /// Diagnostic rule for audit operations not supported on value types.
     /// <para>Message format: "Type '{0}' is a value type and cannot be audited."</para>
     /// </summary>
     public static readonly DiagnosticDescriptor ValueType = new(
@@ -65,7 +54,7 @@ internal static class DiagnosticDescriptors
         description: L(nameof(SR.AuditNotSupportedForValueType_Description)));
 
     /// <summary>
-    /// Diagnostic rule for type must be declared as partial.
+    /// Diagnostic rule for partial type requirement.
     /// <para>Message format: "Type '{0}' must be declared as partial to support auditing."</para>
     /// </summary>
     public static readonly DiagnosticDescriptor PartialType = new(
@@ -78,7 +67,7 @@ internal static class DiagnosticDescriptors
         description: L(nameof(SR.AuditRequiresPartialType_Description)));
 
     /// <summary>
-    /// Diagnostic rule for key type mismatch in audit interfaces.
+    /// Diagnostic rule for key type mismatch between audit interfaces.
     /// <para>Message format: "Type '{0}' has multiple key types in audit interfaces: {1}."</para>
     /// </summary>
     public static readonly DiagnosticDescriptor KeyTypeMismatch = new(
@@ -91,52 +80,30 @@ internal static class DiagnosticDescriptors
         description: L(nameof(SR.AuditKeyTypeMismatch_Description)));
 
     /// <summary>
-    /// Diagnostic rule for suggesting to use ICreationAudited interface.
-    /// <para>Message format: "Consider using ICreationAudited interface instead."</para>
+    /// Diagnostic rule suggesting the use of a more comprehensive audit interface.
+    /// <para>Message format: "Consider using {0} interface instead."</para>
     /// </summary>
-    public static readonly DiagnosticDescriptor UseCreationAudited = new(
-        UseCreationAuditedId,
-        L(nameof(SR.UseCreationAudited_Title)),
-        L(nameof(SR.UseCreationAudited_Message)),
+    public static readonly DiagnosticDescriptor UseAuditedInterface = new(
+        UseAuditedInterfaceId,
+        L(nameof(SR.UseAuditedInterface_Title)),
+        L(nameof(SR.UseAuditedInterface_Message)),
         Category,
         DiagnosticSeverity.Info,
-        isEnabledByDefault: true);
+        isEnabledByDefault: true,
+        description: L(nameof(SR.UseAuditedInterface_Description)));
 
     /// <summary>
-    /// Diagnostic rule for suggesting to use IModificationAudited interface.
-    /// <para>Message format: "Consider using IModificationAudited interface instead."</para>
+    /// Diagnostic rule suggesting the use of method-based audit interface.
+    /// <para>Message format: "Consider using {0} interface instead."</para>
     /// </summary>
-    public static readonly DiagnosticDescriptor UseModificationAudited = new(
-        UseModificationAuditedId,
-        L(nameof(SR.UseModificationAudited_Title)),
-        L(nameof(SR.UseModificationAudited_Message)),
+    public static readonly DiagnosticDescriptor UseNonPropertyInterface = new(
+        UseNonPropertyInterfaceId,
+        L(nameof(SR.UseNonPropertyInterface_Title)),
+        L(nameof(SR.UseNonPropertyInterface_Message)),
         Category,
         DiagnosticSeverity.Info,
-        isEnabledByDefault: true);
-
-    /// <summary>
-    /// Diagnostic rule for suggesting to use IDeletionAudited interface.
-    /// <para>Message format: "Consider using IDeletionAudited interface instead."</para>
-    /// </summary>
-    public static readonly DiagnosticDescriptor UseDeletionAudited = new(
-        UseDeletionAuditedId,
-        L(nameof(SR.UseDeletionAudited_Title)),
-        L(nameof(SR.UseDeletionAudited_Message)),
-        Category,
-        DiagnosticSeverity.Info,
-        isEnabledByDefault: true);
-
-    /// <summary>
-    /// Diagnostic rule for suggesting to use IFullAudited interface.
-    /// <para>Message format: "Consider using IFullAudited interface instead."</para>
-    /// </summary>
-    public static readonly DiagnosticDescriptor UseFullAudited = new(
-        UseFullAuditedId,
-        L(nameof(SR.UseFullAudited_Title)),
-        L(nameof(SR.UseFullAudited_Message)),
-        Category,
-        DiagnosticSeverity.Info,
-        isEnabledByDefault: true);
+        isEnabledByDefault: true,
+        description: L(nameof(SR.UseNonPropertyInterface_Description)));
 
     #endregion Rules
 }

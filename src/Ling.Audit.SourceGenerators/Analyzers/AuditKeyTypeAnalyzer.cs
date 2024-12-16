@@ -9,7 +9,7 @@ using System.Collections.Immutable;
 namespace Ling.Audit.SourceGenerators.Analyzers;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public class AuditKeyTypeAnalyzer : DiagnosticAnalyzer
+internal class AuditKeyTypeAnalyzer : DiagnosticAnalyzer
 {
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
     [

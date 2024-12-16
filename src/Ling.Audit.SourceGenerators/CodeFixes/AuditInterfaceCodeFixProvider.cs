@@ -4,7 +4,6 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Formatting;
 using System.Collections.Immutable;
 using System.Composition;
 
@@ -15,10 +14,7 @@ internal class AuditInterfaceCodeFixProvider : CodeFixProvider
 {
     public sealed override ImmutableArray<string> FixableDiagnosticIds =>
     [
-        DiagnosticDescriptors.UseCreationAuditedId,
-        DiagnosticDescriptors.UseModificationAuditedId,
-        DiagnosticDescriptors.UseDeletionAuditedId,
-        DiagnosticDescriptors.UseFullAuditedId,
+        DiagnosticDescriptors.UseAuditedInterfaceId
     ];
 
     public sealed override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
@@ -28,7 +24,6 @@ internal class AuditInterfaceCodeFixProvider : CodeFixProvider
         var root = await context.Document
             .GetSyntaxRootAsync(context.CancellationToken)
             .ConfigureAwait(false);
-
         if (root == null)
         {
             return;
@@ -43,16 +38,15 @@ internal class AuditInterfaceCodeFixProvider : CodeFixProvider
         }
 
         var diagnostic = context.Diagnostics.First();
-        var targetInterface = diagnostic.Properties["TargetInterface"];
-
-        if (targetInterface == null)
+        if (!diagnostic.Properties.TryGetValue("TargetInterface", out var targetInterface) ||
+            targetInterface is not string { Length: > 0 })
         {
             return;
         }
 
         context.RegisterCodeFix(
             CodeAction.Create(
-                title: $"Use {targetInterface} interface",
+                title: $"Use {targetInterface}<TKey> interface",
                 createChangedDocument: c => UseInterfaceAsync(context.Document, typeDeclaration, targetInterface, c),
                 equivalenceKey: targetInterface),
             diagnostic);
@@ -82,15 +76,15 @@ internal class AuditInterfaceCodeFixProvider : CodeFixProvider
         // Get interfaces to be removed based on target interface
         var interfacesToRemove = targetInterface switch
         {
-            "ICreationAudited" => baseList.Types.Where(t => 
+            "ICreationAudited" => baseList.Types.Where(t =>
                 IsTargetInterface(t, semanticModel, symbols.IHasCreator, symbols.IHasCreationTime)).ToList(),
-            "IModificationAudited" => baseList.Types.Where(t => 
+            "IModificationAudited" => baseList.Types.Where(t =>
                 IsTargetInterface(t, semanticModel, symbols.IHasLastModifier, symbols.IHasLastModificationTime)).ToList(),
-            "IDeletionAudited" => baseList.Types.Where(t => 
+            "IDeletionAudited" => baseList.Types.Where(t =>
                 IsTargetInterface(t, semanticModel, symbols.ISoftDelete, symbols.IHasDeleter, symbols.IHasDeletionTime)).ToList(),
-            "IFullAudited" => baseList.Types.Where(t => 
+            "IFullAudited" => baseList.Types.Where(t =>
                 IsTargetInterface(t, semanticModel, symbols.ICreationAudited, symbols.IModificationAudited, symbols.IDeletionAudited)).ToList(),
-            _ => new List<BaseTypeSyntax>()
+            _ => []
         };
 
         if (!interfacesToRemove.Any())
@@ -124,7 +118,7 @@ internal class AuditInterfaceCodeFixProvider : CodeFixProvider
 
                 newTypes.Add(newInterface);
                 i += interfacesToRemove.Count - 1;
-                
+
                 // Add separator if not the last element
                 if (i < originalTypes.Count - 1)
                 {
@@ -134,9 +128,9 @@ internal class AuditInterfaceCodeFixProvider : CodeFixProvider
             else if (!interfacesToRemove.Contains(originalTypes[i]))
             {
                 newTypes.Add(originalTypes[i]);
-                
+
                 // Add separator if not the last element
-                if (newTypes.Count < originalTypes.Count - interfacesToRemove.Count + 1 
+                if (newTypes.Count < originalTypes.Count - interfacesToRemove.Count + 1
                     && i < originalSeparators.Count)
                 {
                     newSeparators.Add(originalSeparators[i]);
@@ -170,8 +164,8 @@ internal class AuditInterfaceCodeFixProvider : CodeFixProvider
             return false;
         }
 
-        return targetSymbols.Any(target => 
-            target != null && 
+        return targetSymbols.Any(target =>
+            target != null &&
             SymbolEqualityComparer.Default.Equals(typeSymbol.OriginalDefinition, target));
     }
 }

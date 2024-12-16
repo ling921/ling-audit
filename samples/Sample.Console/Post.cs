@@ -9,7 +9,8 @@ public partial class Post :
     IHasModificationTime,
     ISoftDelete,
     IHasDeleter<int>,
-    IHasDeletionTime
+    IHasDeletionTime,
+    IHasCreationUser<int?>
 {
 }
 

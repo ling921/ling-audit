@@ -61,7 +61,7 @@ namespace Ling.Audit.SourceGenerators.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to All audit interfaces implemented by a type must use the same key type parameter..
+        ///   Looks up a localized string similar to All audit interfaces implemented by a type must use the same key type. Review and align the key types across interfaces..
         /// </summary>
         internal static string AuditKeyTypeMismatch_Description {
             get {
@@ -79,7 +79,7 @@ namespace Ling.Audit.SourceGenerators.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Inconsistent audit key types.
+        ///   Looks up a localized string similar to Key type mismatch in audit interfaces.
         /// </summary>
         internal static string AuditKeyTypeMismatch_Title {
             get {
@@ -88,7 +88,7 @@ namespace Ling.Audit.SourceGenerators.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Audit properties can only be generated for classes and records. Structs and record structs are not supported..
+        ///   Looks up a localized string similar to Value types cannot be audited because they are copied by value and do not maintain identity. Consider using a reference type instead..
         /// </summary>
         internal static string AuditNotSupportedForValueType_Description {
             get {
@@ -106,7 +106,7 @@ namespace Ling.Audit.SourceGenerators.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Audit not supported for value types.
+        ///   Looks up a localized string similar to Audit operations not supported on value types.
         /// </summary>
         internal static string AuditNotSupportedForValueType_Title {
             get {
@@ -115,7 +115,7 @@ namespace Ling.Audit.SourceGenerators.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Types implementing audit interfaces must be declared as partial to support source generation of audit properties..
+        ///   Looks up a localized string similar to The type must be declared as partial to allow source generator to implement audit functionality. Add the &apos;partial&apos; modifier to the type declaration..
         /// </summary>
         internal static string AuditRequiresPartialType_Description {
             get {
@@ -133,7 +133,7 @@ namespace Ling.Audit.SourceGenerators.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Audit requires partial type.
+        ///   Looks up a localized string similar to Type must be partial for audit support.
         /// </summary>
         internal static string AuditRequiresPartialType_Title {
             get {
@@ -142,74 +142,56 @@ namespace Ling.Audit.SourceGenerators.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Consider using ICreationAudited interface instead.
+        ///   Looks up a localized string similar to A more comprehensive audit interface is available that provides additional auditing capabilities. Consider using it for better audit coverage..
         /// </summary>
-        internal static string UseCreationAudited_Message {
+        internal static string UseAuditedInterface_Description {
             get {
-                return ResourceManager.GetString("UseCreationAudited_Message", resourceCulture);
+                return ResourceManager.GetString("UseAuditedInterface_Description", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Use ICreationAudited interface.
+        ///   Looks up a localized string similar to Consider using {0} interface instead.
         /// </summary>
-        internal static string UseCreationAudited_Title {
+        internal static string UseAuditedInterface_Message {
             get {
-                return ResourceManager.GetString("UseCreationAudited_Title", resourceCulture);
+                return ResourceManager.GetString("UseAuditedInterface_Message", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Consider using IDeletionAudited interface instead.
+        ///   Looks up a localized string similar to Consider using more comprehensive audit interface.
         /// </summary>
-        internal static string UseDeletionAudited_Message {
+        internal static string UseAuditedInterface_Title {
             get {
-                return ResourceManager.GetString("UseDeletionAudited_Message", resourceCulture);
+                return ResourceManager.GetString("UseAuditedInterface_Title", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Use IDeletionAudited interface.
+        ///   Looks up a localized string similar to Method-based audit interfaces provide more flexibility and control over audit operations. Consider switching from property-based to method-based interface..
         /// </summary>
-        internal static string UseDeletionAudited_Title {
+        internal static string UseNonPropertyInterface_Description {
             get {
-                return ResourceManager.GetString("UseDeletionAudited_Title", resourceCulture);
+                return ResourceManager.GetString("UseNonPropertyInterface_Description", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Consider using IFullAudited interface instead.
+        ///   Looks up a localized string similar to Consider using {0} interface instead.
         /// </summary>
-        internal static string UseFullAudited_Message {
+        internal static string UseNonPropertyInterface_Message {
             get {
-                return ResourceManager.GetString("UseFullAudited_Message", resourceCulture);
+                return ResourceManager.GetString("UseNonPropertyInterface_Message", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Use IFullAudited interface.
+        ///   Looks up a localized string similar to Consider using method-based audit interface.
         /// </summary>
-        internal static string UseFullAudited_Title {
+        internal static string UseNonPropertyInterface_Title {
             get {
-                return ResourceManager.GetString("UseFullAudited_Title", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Consider using IModificationAudited interface instead.
-        /// </summary>
-        internal static string UseModificationAudited_Message {
-            get {
-                return ResourceManager.GetString("UseModificationAudited_Message", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Use IModificationAudited interface.
-        /// </summary>
-        internal static string UseModificationAudited_Title {
-            get {
-                return ResourceManager.GetString("UseModificationAudited_Title", resourceCulture);
+                return ResourceManager.GetString("UseNonPropertyInterface_Title", resourceCulture);
             }
         }
     }

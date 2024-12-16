@@ -9,13 +9,10 @@ using System.Collections.Immutable;
 namespace Ling.Audit.SourceGenerators.Analyzers;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public class AuditInterfaceAnalyzer : DiagnosticAnalyzer
+internal class AuditInterfaceAnalyzer : DiagnosticAnalyzer
 {
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [
-        DiagnosticDescriptors.UseCreationAudited,
-        DiagnosticDescriptors.UseModificationAudited,
-        DiagnosticDescriptors.UseDeletionAudited,
-        DiagnosticDescriptors.UseFullAudited
+        DiagnosticDescriptors.UseAuditedInterface
     ];
 
     public override void Initialize(AnalysisContext context)
@@ -61,9 +58,10 @@ public class AuditInterfaceAnalyzer : DiagnosticAnalyzer
             if (lastInterface != null)
             {
                 var diagnostic = Diagnostic.Create(
-                    DiagnosticDescriptors.UseCreationAudited,
+                    DiagnosticDescriptors.UseAuditedInterface,
                     lastInterface.GetLocation(),
-                    properties: ImmutableDictionary<string, string?>.Empty.Add("TargetInterface", "ICreationAudited"));
+                    ImmutableDictionary<string, string?>.Empty.Add("TargetInterface", "ICreationAudited"),
+                    "ICreationAudited<TKey>");
                 context.ReportDiagnostic(diagnostic);
             }
         }
@@ -79,9 +77,10 @@ public class AuditInterfaceAnalyzer : DiagnosticAnalyzer
             if (lastInterface != null)
             {
                 var diagnostic = Diagnostic.Create(
-                    DiagnosticDescriptors.UseModificationAudited,
+                    DiagnosticDescriptors.UseAuditedInterface,
                     lastInterface.GetLocation(),
-                    properties: ImmutableDictionary<string, string?>.Empty.Add("TargetInterface", "IModificationAudited"));
+                    ImmutableDictionary<string, string?>.Empty.Add("TargetInterface", "IModificationAudited"),
+                    "IModificationAudited<TKey>");
                 context.ReportDiagnostic(diagnostic);
             }
         }
@@ -98,9 +97,10 @@ public class AuditInterfaceAnalyzer : DiagnosticAnalyzer
             if (lastInterface != null)
             {
                 var diagnostic = Diagnostic.Create(
-                    DiagnosticDescriptors.UseDeletionAudited,
+                    DiagnosticDescriptors.UseAuditedInterface,
                     lastInterface.GetLocation(),
-                    properties: ImmutableDictionary<string, string?>.Empty.Add("TargetInterface", "IDeletionAudited"));
+                    ImmutableDictionary<string, string?>.Empty.Add("TargetInterface", "IDeletionAudited"),
+                    "IDeletionAudited<TKey>");
                 context.ReportDiagnostic(diagnostic);
             }
         }
@@ -118,9 +118,10 @@ public class AuditInterfaceAnalyzer : DiagnosticAnalyzer
             if (lastInterface != null)
             {
                 var diagnostic = Diagnostic.Create(
-                    DiagnosticDescriptors.UseFullAudited,
+                    DiagnosticDescriptors.UseAuditedInterface,
                     lastInterface.GetLocation(),
-                    properties: ImmutableDictionary<string, string?>.Empty.Add("TargetInterface", "IFullAudited"));
+                    ImmutableDictionary<string, string?>.Empty.Add("TargetInterface", "IFullAudited"),
+                    "IFullAudited<TKey>");
                 context.ReportDiagnostic(diagnostic);
             }
         }
