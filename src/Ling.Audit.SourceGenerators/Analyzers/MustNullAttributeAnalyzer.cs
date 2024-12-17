@@ -56,7 +56,7 @@ internal class MustNullAttributeAnalyzer : DiagnosticAnalyzer
         if (context.SemanticModel.GetDeclaredSymbol(typeParameter) is not ITypeParameterSymbol typeParameterSymbol)
             return;
 
-        var mustNullableAttribute = context.Compilation.GetTypeByMetadataName(AuditDefaults.MustNullableAttributeFullQualifiedMetadataName);
+        var mustNullableAttribute = context.Compilation.GetTypeByMetadataName(AuditDefaults.MustNullAttributeFullQualifiedMetadataName);
         if (!HasAttributeSymbol(typeParameterSymbol, mustNullableAttribute))
             return;
 
@@ -107,7 +107,7 @@ internal class MustNullAttributeAnalyzer : DiagnosticAnalyzer
 
     private static void CheckGenericTypeArguments(SyntaxNodeAnalysisContext context, GenericNameSyntax genericName, INamedTypeSymbol typeSymbol)
     {
-        var mustNullableAttribute = context.Compilation.GetTypeByMetadataName(AuditDefaults.MustNullableAttributeFullQualifiedMetadataName);
+        var mustNullableAttribute = context.Compilation.GetTypeByMetadataName(AuditDefaults.MustNullAttributeFullQualifiedMetadataName);
 
         var index = 0;
         foreach (var (parameter, argument) in typeSymbol.TypeParameters.Zip(typeSymbol.TypeArguments, (p, a) => (p, a)))

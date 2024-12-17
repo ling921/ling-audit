@@ -29,6 +29,7 @@ public static class CSharpAnalyzerVerifier<TAnalyzer>
         public Test()
         {
             TestState.AdditionalReferences.Add(typeof(MustNullAttribute).Assembly);
+            TestState.ReferenceAssemblies = ReferenceAssemblies.Net.Net80;
         }
     }
 }

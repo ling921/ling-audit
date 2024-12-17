@@ -14,7 +14,7 @@ internal static class AuditDefaults
     public const string DeletedBy = "DeletedBy";
     public const string DeletedAt = "DeletedAt";
 
-    public const string MustNullableAttributeFullQualifiedMetadataName = $"{Namespace}.MustNullableAttribute";
+    public const string MustNullAttributeFullQualifiedMetadataName = $"{Namespace}.MustNullAttribute";
 
     public const string IHasCreatorTypeFullQualifiedMetadataName = $"{Namespace}.IHasCreator`1";
     public const string IHasCreationTimeTypeFullQualifiedMetadataName = $"{Namespace}.IHasCreationTime";
