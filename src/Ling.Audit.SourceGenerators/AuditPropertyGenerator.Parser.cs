@@ -26,6 +26,13 @@ partial class AuditPropertyGenerator
             .Select(p => p.Name)
             .ToList();
 
+        var format = new SymbolDisplayFormat(
+            globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Included,
+            typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+            genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
+            miscellaneousOptions: SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier
+        );
+
         foreach (var @interface in allInterfaces)
         {
             var originalDefinition = @interface.OriginalDefinition;
@@ -33,7 +40,7 @@ partial class AuditPropertyGenerator
             if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasCreator) &&
                 !existingProperties.Contains(AuditDefaults.CreatedBy))
             {
-                var keyType = GetPropertyTypeForTKey(@interface.TypeArguments[0]);
+                var keyType = @interface.TypeArguments[0].ToDisplayString(format);
                 propertiesToGenerate.Add(AuditPropertyInfo.CreatedBy(keyType));
             }
             else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasCreationTime) &&
@@ -44,7 +51,7 @@ partial class AuditPropertyGenerator
             else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasLastModifier) &&
                 !existingProperties.Contains(AuditDefaults.ModifiedBy))
             {
-                var keyType = GetPropertyTypeForTKey(@interface.TypeArguments[0]);
+                var keyType = @interface.TypeArguments[0].ToDisplayString(format);
                 propertiesToGenerate.Add(AuditPropertyInfo.ModifiedBy(keyType));
             }
             else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasLastModificationTime) &&
@@ -60,7 +67,7 @@ partial class AuditPropertyGenerator
             else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasDeleter) &&
                 !existingProperties.Contains(AuditDefaults.DeletedBy))
             {
-                var keyType = GetPropertyTypeForTKey(@interface.TypeArguments[0]);
+                var keyType = @interface.TypeArguments[0].ToDisplayString(format);
                 propertiesToGenerate.Add(AuditPropertyInfo.DeletedBy(keyType));
             }
             else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasDeletionTime) &&
@@ -70,30 +77,66 @@ partial class AuditPropertyGenerator
             }
         }
 
+        if (propertiesToGenerate.Count > 0)
+        {
+            Test(classDeclaration, semanticModel);
+        }
+
         return propertiesToGenerate.Count > 0
             ? (classDeclaration, propertiesToGenerate)
             : null;
     }
 
-    private static string GetPropertyTypeForTKey(ITypeSymbol keyType)
+    private static void Test(ClassDeclarationSyntax classDeclaration, SemanticModel semanticModel)
     {
-        var format = new SymbolDisplayFormat(
-            globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Included,
-            typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
-            genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
-            miscellaneousOptions: SymbolDisplayMiscellaneousOptions.None
-        );
+        var baseList = classDeclaration.BaseList!;
+        //var firstType = baseList.Types.First().Type!;
+        //if (firstType is GenericNameSyntax genericName)
+        //{
+        //    var typeArguments = genericName.TypeArgumentList.Arguments;
+        //    foreach (var argument in typeArguments)
+        //    {
+        //        var attributes = argument.GetAttributes();
+        //        if (attributes.Length > 0)
+        //        {
+        //            var attribute = attributes[0];
+        //        }
+        //    }
+        //}
+        //var firstTypeSymbol = semanticModel.GetTypeInfo(firstType).Type!;
+        //var xxx = firstTypeSymbol.ContainingType;
+        //if (firstTypeSymbol is INamedTypeSymbol { IsGenericType: true } typeSymbol)
+        //{
+        //    var arguments = typeSymbol.TypeArguments;
+        //    foreach (var argument in arguments)
+        //    {
+        //        var attributes = argument.GetAttributes();
+        //        if (attributes.Length > 0)
+        //        {
+        //            var attribute = attributes[0];
+        //        }
+        //    }
 
-        var baseType = keyType is INamedTypeSymbol namedType &&
-                      namedType.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T
-            ? namedType.TypeArguments[0]
-            : keyType;
-
-        var baseTypeString = baseType.ToDisplayString(format);
-
-        return baseType.IsValueType
-            ? $"global::System.Nullable<{baseTypeString}>"
-            : $"{baseTypeString}?";
+        //    var ori = typeSymbol.OriginalDefinition;
+        //    var arguments2 = typeSymbol.TypeArguments;
+        //    foreach (var argument in arguments2)
+        //    {
+        //        var attributes = argument.GetAttributes();
+        //        if (attributes.Length > 0)
+        //        {
+        //            var attribute = attributes[0];
+        //        }
+        //    }
+        //    var parameters2 = typeSymbol.TypeParameters;
+        //    foreach (var parameter in parameters2)
+        //    {
+        //        var attributes = parameter.GetAttributes();
+        //        if (attributes.Length > 0)
+        //        {
+        //            var attribute = attributes[0];
+        //        }
+        //    }
+        //}
     }
 
     private record AuditPropertyInfo(

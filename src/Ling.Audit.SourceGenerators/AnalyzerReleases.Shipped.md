@@ -7,8 +7,8 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|--------------------
-LA001   |  Design  |  Error   | LA001_AuditTypeAnalyzer, [Documentation](LA001_Documentation_Link)
-LA002   |  Design  |  Warning | LA002_AuditTypeAnalyzer, [Documentation](LA002_Documentation_Link)
-LA003   |  Design  |  Error   | LA003__AuditKeyTypeAnalyzer [Documentation](LA003_Documentation_Link)
+LA001   |  Design  |  Error   | LA001_MustNullAttributeAnalyzer [Documentation](LA001_Documentation_Link)
+LA101   |  Design  |  Error   | LA101_AuditTypeAnalyzer, [Documentation](LA101_Documentation_Link)
+LA102   |  Design  |  Warning | LA102_AuditTypeAnalyzer, [Documentation](LA102_Documentation_Link)
+LA103   |  Design  |  Error   | LA103__AuditKeyTypeAnalyzer [Documentation](LA103_Documentation_Link)
 LA901   |  Design  |  Info    | LA901__AuditInterfaceAnalyzer [Documentation](LA901_Documentation_Link)
-LA902   |  Design  |  Info    | LA902__UseNonPropertyInterfaceAnalyzer [Documentation](LA902_Documentation_Link)

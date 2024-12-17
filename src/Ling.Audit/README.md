@@ -4,13 +4,13 @@
 
 ```csharp
 public partial class Post :
-    IHasCreator<int>, // Adds CreatedBy property
-    IHasCreationTime, // Adds CreatedAt property
-    IHasModifier<int>, // Adds ModifiedBy property
-    IHasModificationTime, // Adds ModifiedAt property
-    ISoftDelete, // Adds IsDeleted property
-    IHasDeleter<int>, // Adds DeletedBy and DeletedAt properties
-    IHasDeletionTime // Adds DeletedAt property
+    IHasCreator<int?>,      // Adds CreatedBy property
+    IHasCreationTime,       // Adds CreatedAt property
+    IHasModifier<int?>,     // Adds LastModifiedBy property
+    IHasModificationTime,   // Adds LastModifiedAt property
+    ISoftDelete,            // Adds IsDeleted property
+    IHasDeleter<int?>,      // Adds DeletedBy and DeletedAt properties
+    IHasDeletionTime        // Adds DeletedAt property
 {
     public string Title { get; set; }
     public string Content { get; set; }
@@ -24,8 +24,8 @@ partial class Post
 {
     public int? CreatedBy { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
-    public int? ModifiedBy { get; set; }
-    public DateTimeOffset? ModifiedAt { get; set; }
+    public int? LastModifiedBy { get; set; }
+    public DateTimeOffset? LastModifiedAt { get; set; }
     public bool IsDeleted { get; set; }
     public int? DeletedBy { get; set; }
     public DateTimeOffset? DeletedAt { get; set; }
@@ -33,16 +33,18 @@ partial class Post
 ```
 
 
-## Supported Interfaces
+## Supported Interfaces & Properties
 
-- `IHasCreator<TKey>` - Adds `CreatedBy` property
-- `IHasCreationTime` - Adds `CreatedAt` property
-- `IHasModifier<TKey>` - Adds `ModifiedBy` property
-- `IHasModificationTime` - Adds `ModifiedAt` property
-- `ISoftDelete` - Adds `IsDeleted` property
-- `IHasDeleter<TKey>` - Adds `DeletedBy` and `DeletedAt` properties
-- `IHasDeletionTime` - Adds `DeletedAt` property
-- `ICreationAudited<TKey>` - Adds `CreatedBy` and `CreatedAt` properties
-- `IModificationAudited<TKey>` - Adds `ModifiedBy` and `ModifiedAt` properties
-- `IDeletionAudited<TKey>` - Adds `IsDeleted`, `DeletedBy` and `DeletedAt` properties
-- `IFullAudited<TKey>` - Adds `CreatedBy`, `CreatedAt`, `ModifiedBy`, `ModifiedAt`, `IsDeleted`, `DeletedBy` and `DeletedAt` properties
+| Interface | Properties |
+|-----------|------------|
+| `IHasCreator<TKey>` | `CreatedBy` |
+| `IHasCreationTime` | `CreatedAt` |
+| `IHasModifier<TKey>` | `LastModifiedBy` |
+| `IHasModificationTime` | `LastModifiedAt` |
+| `ISoftDelete` | `IsDeleted` |
+| `IHasDeleter<TKey>` | `DeletedBy`, `DeletedAt` |
+| `IHasDeletionTime` | `DeletedAt` |
+| `ICreationAudited<TKey>` | `CreatedBy`, `CreatedAt` |
+| `IModificationAudited<TKey>` | `LastModifiedBy`, `LastModifiedAt` |
+| `IDeletionAudited<TKey>` | `IsDeleted`, `DeletedBy`, `DeletedAt` |
+| `IFullAudited<TKey>` | `CreatedBy`, `CreatedAt`, `LastModifiedBy`, `LastModifiedAt`, `IsDeleted`, `DeletedBy`, `DeletedAt` |

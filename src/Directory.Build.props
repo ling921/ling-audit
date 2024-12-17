@@ -10,5 +10,11 @@
     <VersionPrefix>1.0.0</VersionPrefix>
     <VersionSuffix>beta-202412161527</VersionSuffix>
   </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>$(AssemblyName).Tests</_Parameter1>
+    </AssemblyAttribute>    
+  </ItemGroup>
     
 </Project>

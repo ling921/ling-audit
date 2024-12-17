@@ -12,33 +12,46 @@ internal static class DiagnosticDescriptors
     #region Diagnostic IDs
 
     /// <summary>
+    /// Diagnostic ID for <see cref="TypeParameterMustBeNullable"/>: Type parameter must be nullable
+    /// </summary>
+    public const string TypeParameterMustBeNullableId = "LA001";
+
+    /// <summary>
     /// Diagnostic ID for <see cref="ValueType"/>: Audit operations are not supported on value types
     /// </summary>
-    public const string ValueTypeId = "LA001";
+    public const string ValueTypeId = "LA101";
 
     /// <summary>
     /// Diagnostic ID for <see cref="PartialType"/>: Type must be declared as partial to support audit operations
     /// </summary>
-    public const string PartialTypeId = "LA002";
+    public const string PartialTypeId = "LA102";
 
     /// <summary>
     /// Diagnostic ID for <see cref="KeyTypeMismatch"/>: Key type mismatch detected between multiple audit interfaces
     /// </summary>
-    public const string KeyTypeMismatchId = "LA003";
+    public const string KeyTypeMismatchId = "LA103";
 
     /// <summary>
     /// Diagnostic ID for <see cref="UseAuditedInterface"/>: Suggestion to use a more comprehensive audit interface
     /// </summary>
     public const string UseAuditedInterfaceId = "LA901";
 
-    /// <summary>
-    /// Diagnostic ID for <see cref="UseNonPropertyInterface"/>: Suggestion to use method-based audit interface instead of property-based interface
-    /// </summary>
-    public const string UseNonPropertyInterfaceId = "LA902";
-
     #endregion Diagnostic IDs
 
     #region Rules
+
+    /// <summary>
+    /// Diagnostic rule for type parameter must be nullable.
+    /// <para>Message format: "Type parameter '{0}' must be nullable."</para>
+    /// </summary>
+    public static readonly DiagnosticDescriptor TypeParameterMustBeNullable = new(
+        TypeParameterMustBeNullableId,
+        L(nameof(SR.TypeParameterMustBeNullable_Title)),
+        L(nameof(SR.TypeParameterMustBeNullable_Message)),
+        Category,
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: L(nameof(SR.TypeParameterMustBeNullable_Description)));
 
     /// <summary>
     /// Diagnostic rule for audit operations not supported on value types.
@@ -91,19 +104,6 @@ internal static class DiagnosticDescriptors
         DiagnosticSeverity.Info,
         isEnabledByDefault: true,
         description: L(nameof(SR.UseAuditedInterface_Description)));
-
-    /// <summary>
-    /// Diagnostic rule suggesting the use of method-based audit interface.
-    /// <para>Message format: "Consider using {0} interface instead."</para>
-    /// </summary>
-    public static readonly DiagnosticDescriptor UseNonPropertyInterface = new(
-        UseNonPropertyInterfaceId,
-        L(nameof(SR.UseNonPropertyInterface_Title)),
-        L(nameof(SR.UseNonPropertyInterface_Message)),
-        Category,
-        DiagnosticSeverity.Info,
-        isEnabledByDefault: true,
-        description: L(nameof(SR.UseNonPropertyInterface_Description)));
 
     #endregion Rules
 }
