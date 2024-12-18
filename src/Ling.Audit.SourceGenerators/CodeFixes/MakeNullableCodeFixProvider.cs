@@ -28,20 +28,21 @@ internal class MakeNullableCodeFixProvider : CodeFixProvider
         var diagnostic = context.Diagnostics[0];
         var diagnosticSpan = diagnostic.Location.SourceSpan;
 
-        if (root.FindNode(diagnosticSpan) is not TypeParameterSyntax node)
-        {
-            return;
-        }
+        var node = root.FindNode(diagnosticSpan);
 
-        context.RegisterCodeFix(
-            CodeAction.Create(
-                title: "Make type parameter nullable",
-                createChangedDocument: c => MakeNullableAsync(context.Document, node, c),
-                equivalenceKey: "MakeNullable"),
-            diagnostic);
+        if (node is TypeSyntax typeNode &&
+            node is not TypeParameterSyntax)
+        {
+            context.RegisterCodeFix(
+                CodeAction.Create(
+                    title: "Make type nullable",
+                    createChangedDocument: c => MakeNullableAsync(context.Document, typeNode, c),
+                    equivalenceKey: "MakeNullable"),
+                diagnostic);
+        }
     }
 
-    private static async Task<Document> MakeNullableAsync(Document document, TypeParameterSyntax typeParameterSyntax, CancellationToken cancellationToken)
+    private static async Task<Document> MakeNullableAsync(Document document, TypeSyntax typeSyntax, CancellationToken cancellationToken)
     {
         var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
         if (root == null)
@@ -51,18 +52,17 @@ internal class MakeNullableCodeFixProvider : CodeFixProvider
         if (semanticModel == null)
             return document;
 
-        if (semanticModel.GetDeclaredSymbol(typeParameterSyntax, cancellationToken) is not ITypeParameterSymbol typeParameterSymbol || !typeParameterSymbol.HasValueTypeConstraint)
+        var typeInfo = semanticModel.GetTypeInfo(typeSyntax, cancellationToken);
+        if (typeInfo.Type?.IsValueType != true)
         {
             return document;
         }
 
-        if (typeParameterSyntax.Parent is not TypeParameterListSyntax)
-        {
-            return document;
-        }
+        var nullableType = SyntaxFactory.NullableType(
+            typeSyntax.WithoutTrivia())
+            .WithTriviaFrom(typeSyntax);
 
-        var newTypeParameter = SyntaxFactory.TypeParameter(typeParameterSyntax.Identifier.WithTrailingTrivia(SyntaxFactory.ParseTrailingTrivia("?")));
-        var newRoot = root.ReplaceNode(typeParameterSyntax, newTypeParameter);
+        var newRoot = root.ReplaceNode(typeSyntax, nullableType);
 
         return document.WithSyntaxRoot(newRoot);
     }

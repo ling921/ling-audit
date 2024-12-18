@@ -1,12 +1,14 @@
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
 
 namespace Ling.Audit.SourceGenerators.Tests.Verifiers;
 
-internal static class CSharpAnalyzerVerifier<TAnalyzer>
+internal static class CSharpCodeFixVerifier<TAnalyzer, TCodeFix>
     where TAnalyzer : DiagnosticAnalyzer, new()
+    where TCodeFix : CodeFixProvider, new()
 {
     public static DiagnosticResult Diagnostic()
         => CSharpAnalyzerVerifier<TAnalyzer, DefaultVerifier>.Diagnostic();
@@ -17,14 +19,19 @@ internal static class CSharpAnalyzerVerifier<TAnalyzer>
     public static DiagnosticResult Diagnostic(DiagnosticDescriptor descriptor)
         => CSharpAnalyzerVerifier<TAnalyzer, DefaultVerifier>.Diagnostic(descriptor);
 
-    public static async Task VerifyAnalyzerAsync(string source, params DiagnosticResult[] expected)
+    public static async Task VerifyCodeFixAsync(string source, string fixedSource, params DiagnosticResult[] expected)
     {
-        var test = new Test { TestCode = source };
+        var test = new Test
+        {
+            TestCode = source,
+            FixedCode = fixedSource,
+        };
+
         test.ExpectedDiagnostics.AddRange(expected);
-        await test.RunAsync();
+        await test.RunAsync(CancellationToken.None);
     }
 
-    private class Test : CSharpAnalyzerTest<TAnalyzer, DefaultVerifier>
+    private class Test : CSharpCodeFixTest<TAnalyzer, TCodeFix, DefaultVerifier>
     {
         public Test()
         {
