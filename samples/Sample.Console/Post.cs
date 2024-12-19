@@ -3,25 +3,21 @@
 namespace Sample.Console;
 
 public partial class Post :
-    IHasCreator<int>,
+    IHasCreator<int?>,
     IHasCreationTime,
-    IHasModifier<int>,
-    IHasModificationTime,
     ISoftDelete,
-    IHasDeleter<int>,
+    IHasDeleter<int?>,
     IHasDeletionTime
 {
+    public virtual int? CreatedBy { get; set; }
 }
 
-public partial class Base : IHasCreator<int>
+public partial class Post :
+    IHasModifier<int?>,
+    IHasModificationTime,
+    ISoftDelete,
+    IHasDeleter<int?>,
+    IHasDeletionTime
 {
-    private IHasCreator<int> _instance;
-
-    public IHasCreator<int> Instance => _instance;
-
-    public Base()
-    {
-        IHasCreator<int> a = this;
-        _instance = a;
-    }
+    public virtual int? LastModifiedBy { get; set; }
 }

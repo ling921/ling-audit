@@ -22,6 +22,7 @@ internal class AuditTypeAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
+
         context.RegisterSyntaxNodeAction(
             AnalyzeNode,
             SyntaxKind.ClassDeclaration,
@@ -31,60 +32,119 @@ internal class AuditTypeAnalyzer : DiagnosticAnalyzer
         );
     }
 
-    private void AnalyzeNode(SyntaxNodeAnalysisContext context)
+    private static void AnalyzeNode(SyntaxNodeAnalysisContext context)
     {
         var typeDeclaration = (TypeDeclarationSyntax)context.Node;
-        var semanticModel = context.SemanticModel;
-
-        if (semanticModel.GetDeclaredSymbol(typeDeclaration) is not INamedTypeSymbol typeSymbol)
+        if (context.SemanticModel.GetDeclaredSymbol(typeDeclaration, context.CancellationToken) is not INamedTypeSymbol typeSymbol)
         {
             return;
         }
 
-        var symbols = new AuditSymbols(semanticModel.Compilation);
-        var allInterfaces = typeSymbol.AllInterfaces;
+        switch (typeDeclaration)
+        {
+            case ClassDeclarationSyntax classDeclaration:
+                AnalyzeReferenceTypeDeclarationNode(context, classDeclaration, typeSymbol);
+                break;
+            case StructDeclarationSyntax structDeclaration:
+                AnalyzeValueTypeDeclarationNode(context, structDeclaration, typeSymbol);
+                break;
+            case RecordDeclarationSyntax recordDeclaration:
+                AnalyzeRecordDeclarationNode(context, recordDeclaration, typeSymbol);
+                break;
+        }
+    }
+
+    private static void AnalyzeReferenceTypeDeclarationNode(SyntaxNodeAnalysisContext context, TypeDeclarationSyntax typeDeclaration, INamedTypeSymbol typeSymbol)
+    {
+        if (typeDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword))
+        {
+            return;
+        }
+
         var existingProperties = typeSymbol.GetMembers()
-            .OfType<IPropertySymbol>()
+            .Where(m => m.Kind == SymbolKind.Property)
+            .Cast<IPropertySymbol>()
+            .Where(p => !p.IsImplicitlyDeclared &&
+                       p.Locations.Any(l => l.IsInSource))
             .Select(p => p.Name)
             .ToList();
 
-        var needsGeneration = allInterfaces.Any(i =>
+        foreach (var propertyName in GetAuditPropertyNames(context, typeSymbol))
         {
-            var originalDefinition = i.OriginalDefinition;
-            return
-                (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasCreator) && !existingProperties.Contains(AuditDefaults.CreatedBy)) ||
-                (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasCreationTime) && !existingProperties.Contains(AuditDefaults.CreatedAt)) ||
-                (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasLastModifier) && !existingProperties.Contains(AuditDefaults.ModifiedBy)) ||
-                (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasLastModificationTime) && !existingProperties.Contains(AuditDefaults.ModifiedAt)) ||
-                (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.ISoftDelete) && !existingProperties.Contains(AuditDefaults.IsDeleted)) ||
-                (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasDeleter) && !existingProperties.Contains(AuditDefaults.DeletedBy)) ||
-                (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasDeletionTime) && !existingProperties.Contains(AuditDefaults.DeletedAt));
-        });
-
-        if (needsGeneration)
-        {
-            var typeName = typeSymbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
-
-            if (!IsClassOrRecord(typeDeclaration))
+            if (!existingProperties.Contains(propertyName))
             {
-                var diagnostic = Diagnostic.Create(
-                    DiagnosticDescriptors.ValueType,
-                    typeDeclaration.Identifier.GetLocation(),
-                    typeName);
-                context.ReportDiagnostic(diagnostic);
-            }
-            else if (!typeDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)))
-            {
+                var typeName = typeSymbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
                 var diagnostic = Diagnostic.Create(
                     DiagnosticDescriptors.PartialType,
                     typeDeclaration.Identifier.GetLocation(),
                     typeName);
                 context.ReportDiagnostic(diagnostic);
+
+                return;
             }
         }
     }
 
-    private static bool IsClassOrRecord(TypeDeclarationSyntax typeDeclaration) =>
-        typeDeclaration.IsKind(SyntaxKind.ClassDeclaration) ||
-        typeDeclaration.IsKind(SyntaxKind.RecordDeclaration);
+    private static void AnalyzeValueTypeDeclarationNode(SyntaxNodeAnalysisContext context, TypeDeclarationSyntax typeDeclaration, INamedTypeSymbol typeSymbol)
+    {
+        if (GetAuditPropertyNames(context, typeSymbol).Any())
+        {
+            var typeName = typeSymbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+            var diagnostic = Diagnostic.Create(
+                DiagnosticDescriptors.ValueType,
+                typeDeclaration.Identifier.GetLocation(),
+                typeName);
+            context.ReportDiagnostic(diagnostic);
+        }
+    }
+
+    private static void AnalyzeRecordDeclarationNode(SyntaxNodeAnalysisContext context, RecordDeclarationSyntax recordDeclaration, INamedTypeSymbol typeSymbol)
+    {
+        if (typeSymbol.TypeKind == TypeKind.Struct)
+        {
+            AnalyzeValueTypeDeclarationNode(context, recordDeclaration, typeSymbol);
+        }
+        else
+        {
+            AnalyzeReferenceTypeDeclarationNode(context, recordDeclaration, typeSymbol);
+        }
+    }
+
+    private static IEnumerable<string> GetAuditPropertyNames(SyntaxNodeAnalysisContext context, INamedTypeSymbol typeSymbol)
+    {
+        var symbols = new AuditSymbols(context.SemanticModel.Compilation);
+        foreach (var @interface in typeSymbol.AllInterfaces)
+        {
+            var originalDefinition = @interface.OriginalDefinition;
+
+            if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasCreator))
+            {
+                yield return AuditDefaults.CreatedBy;
+            }
+            else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasCreationTime))
+            {
+                yield return AuditDefaults.CreatedAt;
+            }
+            else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasLastModifier))
+            {
+                yield return AuditDefaults.ModifiedBy;
+            }
+            else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasLastModificationTime))
+            {
+                yield return AuditDefaults.ModifiedAt;
+            }
+            else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.ISoftDelete))
+            {
+                yield return AuditDefaults.IsDeleted;
+            }
+            else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasDeleter))
+            {
+                yield return AuditDefaults.DeletedBy;
+            }
+            else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasDeletionTime))
+            {
+                yield return AuditDefaults.DeletedAt;
+            }
+        }
+    }
 }

@@ -5,9 +5,9 @@ namespace Ling.Audit.SourceGenerators;
 
 partial class AuditPropertyGenerator
 {
-    private static string GetGeneratedCode(ClassDeclarationSyntax classDeclaration, List<AuditPropertyInfo> properties)
+    private static string GetGeneratedCode(TypeDeclarationSyntax typeDeclaration, EquatableArray<AuditPropertyInfo> properties)
     {
-        var (namespaceName, containingTypes) = GetTypeContext(classDeclaration);
+        var (namespaceName, containingTypes) = GetTypeContext(typeDeclaration);
 
         var cb = new CodeBuilder();
 
@@ -30,7 +30,7 @@ partial class AuditPropertyGenerator
 
         cb.AppendFormatLine("[global::System.CodeDom.Compiler.GeneratedCode(\"Ling.Audit.SourceGenerators\", \"{0}\")]", AuditDefaults.Version)
             .AppendLine("[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]")
-            .AppendFormatLine("partial class {0}", classDeclaration.Identifier.Text)
+            .AppendFormatLine("partial {0} {1}", typeDeclaration.Keyword, typeDeclaration.Identifier.Text)
             .OpenBrace();
 
         var index = 0;
@@ -64,10 +64,10 @@ partial class AuditPropertyGenerator
 
     private record TypeInfo(string Keyword, string Name);
 
-    private static (string Namespace, List<TypeInfo> ContainingTypes) GetTypeContext(ClassDeclarationSyntax classDeclaration)
+    private static (string Namespace, List<TypeInfo> ContainingTypes) GetTypeContext(TypeDeclarationSyntax typeDeclaration)
     {
         var types = new List<TypeInfo>();
-        var parent = classDeclaration.Parent;
+        var parent = typeDeclaration.Parent;
         var namespaceName = "global::System";
 
         while (parent != null)

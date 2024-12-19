@@ -1,3 +1,4 @@
+using Ling.Audit.SourceGenerators.Helpers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -12,29 +13,28 @@ public sealed partial class AuditPropertyGenerator : IIncrementalGenerator
     /// <inheritdoc/>
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var classDeclarations = context.SyntaxProvider
+        var declarations = context.SyntaxProvider
             .CreateSyntaxProvider(
                 predicate: static (s, _) => IsSyntaxTargetForGeneration(s),
-                transform: static (ctx, _) => GetTargetForGeneration(ctx))
-            .Where(static m => m is not null);
+                transform: static (ctx, _) => ctx)
+            .Collect()
+            .SelectMany((ctxs, _) => ctxs
+                .GroupBy(ctx => ctx.Node.SyntaxTree)
+                .Select(group => GetTargetForGeneration(group.First()))
+                .Where(result => result.Properties.Length > 0));
 
-        context.RegisterSourceOutput(
-            classDeclarations,
-            static (spc, source) => Execute(spc, source!.Value.Declaration, source!.Value.Properties));
+        context.RegisterSourceOutput(declarations, Execute);
     }
 
-    /// <summary>
-    /// Execute the source generation.
-    /// </summary>
-    /// <param name="context">The source production context.</param>
-    /// <param name="classDeclaration">The class declaration.</param>
-    /// <param name="properties">The properties.</param>
     private static void Execute(
         SourceProductionContext context,
-        ClassDeclarationSyntax classDeclaration,
-        List<AuditPropertyInfo> properties)
+        (TypeDeclarationSyntax Declaration, EquatableArray<AuditPropertyInfo> Properties) declarationInfo)
     {
-        var generatedCode = GetGeneratedCode(classDeclaration, properties);
-        context.AddSource($"{classDeclaration.Identifier}.g.cs", generatedCode);
+        var (declaration, properties) = declarationInfo;
+
+        var generatedCode = GetGeneratedCode(declaration, properties);
+        context.AddSource(
+            $"{declaration.Identifier}_{declaration.SyntaxTree.FilePath.GetHashCode():X8}.g.cs",
+            generatedCode);
     }
 }

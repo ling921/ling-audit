@@ -1,20 +1,27 @@
+using Ling.Audit.SourceGenerators.Helpers;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Ling.Audit.SourceGenerators;
 
 partial class AuditPropertyGenerator
 {
-    private static bool IsSyntaxTargetForGeneration(SyntaxNode node) => node is ClassDeclarationSyntax { BaseList.Types.Count: > 0 };
-
-    private static (ClassDeclarationSyntax Declaration, List<AuditPropertyInfo> Properties)? GetTargetForGeneration(GeneratorSyntaxContext context)
+    private static bool IsSyntaxTargetForGeneration(SyntaxNode node)
     {
-        var classDeclaration = (context.Node as ClassDeclarationSyntax)!;
+        return node is TypeDeclarationSyntax { BaseList.Types.Count: > 0 } typeDeclaration &&
+            (typeDeclaration is ClassDeclarationSyntax or RecordDeclarationSyntax) &&
+            typeDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword));
+    }
+
+    private static (TypeDeclarationSyntax Declaration, EquatableArray<AuditPropertyInfo> Properties) GetTargetForGeneration(GeneratorSyntaxContext context)
+    {
+        var typeDeclaration = (TypeDeclarationSyntax)context.Node;
         var semanticModel = context.SemanticModel;
 
-        if (semanticModel.GetDeclaredSymbol(classDeclaration) is not INamedTypeSymbol classSymbol)
+        if (semanticModel.GetDeclaredSymbol(typeDeclaration) is not INamedTypeSymbol classSymbol)
         {
-            return null;
+            return (typeDeclaration, EquatableArray<AuditPropertyInfo>.Empty);
         }
 
         var symbols = new AuditSymbols(semanticModel.Compilation);
@@ -22,7 +29,10 @@ partial class AuditPropertyGenerator
         var propertiesToGenerate = new List<AuditPropertyInfo>();
 
         var existingProperties = classSymbol.GetMembers()
-            .OfType<IPropertySymbol>()
+            .Where(m => m.Kind == SymbolKind.Property)
+            .Cast<IPropertySymbol>()
+            .Where(p => !p.IsImplicitlyDeclared &&
+                       p.Locations.Any(l => l.IsInSource))
             .Select(p => p.Name)
             .ToList();
 
@@ -38,7 +48,8 @@ partial class AuditPropertyGenerator
             var originalDefinition = @interface.OriginalDefinition;
 
             if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasCreator) &&
-                !existingProperties.Contains(AuditDefaults.CreatedBy))
+                !existingProperties.Contains(AuditDefaults.CreatedBy) &&
+                @interface.TypeArguments[0].CanAssignNull())
             {
                 var keyType = @interface.TypeArguments[0].ToDisplayString(format);
                 propertiesToGenerate.Add(AuditPropertyInfo.CreatedBy(keyType));
@@ -49,7 +60,8 @@ partial class AuditPropertyGenerator
                 propertiesToGenerate.Add(AuditPropertyInfo.CreatedAt);
             }
             else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasLastModifier) &&
-                !existingProperties.Contains(AuditDefaults.ModifiedBy))
+                !existingProperties.Contains(AuditDefaults.ModifiedBy) &&
+                @interface.TypeArguments[0].CanAssignNull())
             {
                 var keyType = @interface.TypeArguments[0].ToDisplayString(format);
                 propertiesToGenerate.Add(AuditPropertyInfo.ModifiedBy(keyType));
@@ -65,7 +77,8 @@ partial class AuditPropertyGenerator
                 propertiesToGenerate.Add(AuditPropertyInfo.IsDeleted);
             }
             else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasDeleter) &&
-                !existingProperties.Contains(AuditDefaults.DeletedBy))
+                !existingProperties.Contains(AuditDefaults.DeletedBy) &&
+                @interface.TypeArguments[0].CanAssignNull())
             {
                 var keyType = @interface.TypeArguments[0].ToDisplayString(format);
                 propertiesToGenerate.Add(AuditPropertyInfo.DeletedBy(keyType));
@@ -77,66 +90,7 @@ partial class AuditPropertyGenerator
             }
         }
 
-        if (propertiesToGenerate.Count > 0)
-        {
-            Test(classDeclaration, semanticModel);
-        }
-
-        return propertiesToGenerate.Count > 0
-            ? (classDeclaration, propertiesToGenerate)
-            : null;
-    }
-
-    private static void Test(ClassDeclarationSyntax classDeclaration, SemanticModel semanticModel)
-    {
-        var baseList = classDeclaration.BaseList!;
-        //var firstType = baseList.Types.First().Type!;
-        //if (firstType is GenericNameSyntax genericName)
-        //{
-        //    var typeArguments = genericName.TypeArgumentList.Arguments;
-        //    foreach (var argument in typeArguments)
-        //    {
-        //        var attributes = argument.GetAttributes();
-        //        if (attributes.Length > 0)
-        //        {
-        //            var attribute = attributes[0];
-        //        }
-        //    }
-        //}
-        //var firstTypeSymbol = semanticModel.GetTypeInfo(firstType).Type!;
-        //var xxx = firstTypeSymbol.ContainingType;
-        //if (firstTypeSymbol is INamedTypeSymbol { IsGenericType: true } typeSymbol)
-        //{
-        //    var arguments = typeSymbol.TypeArguments;
-        //    foreach (var argument in arguments)
-        //    {
-        //        var attributes = argument.GetAttributes();
-        //        if (attributes.Length > 0)
-        //        {
-        //            var attribute = attributes[0];
-        //        }
-        //    }
-
-        //    var ori = typeSymbol.OriginalDefinition;
-        //    var arguments2 = typeSymbol.TypeArguments;
-        //    foreach (var argument in arguments2)
-        //    {
-        //        var attributes = argument.GetAttributes();
-        //        if (attributes.Length > 0)
-        //        {
-        //            var attribute = attributes[0];
-        //        }
-        //    }
-        //    var parameters2 = typeSymbol.TypeParameters;
-        //    foreach (var parameter in parameters2)
-        //    {
-        //        var attributes = parameter.GetAttributes();
-        //        if (attributes.Length > 0)
-        //        {
-        //            var attribute = attributes[0];
-        //        }
-        //    }
-        //}
+        return (typeDeclaration, new(propertiesToGenerate));
     }
 
     private record AuditPropertyInfo(
