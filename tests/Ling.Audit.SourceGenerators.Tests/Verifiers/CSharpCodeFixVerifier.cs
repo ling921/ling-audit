@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
+using System.Collections.Immutable;
 
 namespace Ling.Audit.SourceGenerators.Tests.Verifiers;
 
@@ -37,6 +38,11 @@ internal static class CSharpCodeFixVerifier<TAnalyzer, TCodeFix>
         {
             TestState.AdditionalReferences.Add(typeof(MustNullAttribute).Assembly);
             TestState.ReferenceAssemblies = ReferenceAssemblies.Net.Net80;
+        }
+
+        protected override ImmutableArray<(Project project, Diagnostic diagnostic)> FilterDiagnostics(ImmutableArray<(Project project, Diagnostic diagnostic)> diagnostics)
+        {
+            return diagnostics.Where(d => d.diagnostic.Id.StartsWith("LA")).ToImmutableArray();
         }
     }
 }

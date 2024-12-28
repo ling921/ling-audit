@@ -2,7 +2,7 @@ using Microsoft.CodeAnalysis;
 
 namespace Ling.Audit.SourceGenerators.Helpers;
 
-public static class ITypeSymbolHelpers
+internal static class ITypeSymbolHelpers
 {
     /// <summary>
     /// Checks if the type is a generic type symbol of <see cref="Nullable{T}"/>

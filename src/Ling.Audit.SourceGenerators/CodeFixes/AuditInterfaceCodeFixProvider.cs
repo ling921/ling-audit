@@ -37,7 +37,7 @@ internal class AuditInterfaceCodeFixProvider : CodeFixProvider
             return;
         }
 
-        var diagnostic = context.Diagnostics.First();
+        var diagnostic = context.Diagnostics[0];
         if (!diagnostic.Properties.TryGetValue("TargetInterface", out var targetInterface) ||
             targetInterface is not string { Length: > 0 })
         {
@@ -93,7 +93,7 @@ internal class AuditInterfaceCodeFixProvider : CodeFixProvider
         }
 
         // Get the position of the first interface to be removed
-        var firstInterface = interfacesToRemove.First();
+        var firstInterface = interfacesToRemove[0];
         var lastInterface = interfacesToRemove.Last();
         var insertIndex = baseList.Types.IndexOf(firstInterface);
 

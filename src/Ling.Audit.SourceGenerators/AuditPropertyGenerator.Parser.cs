@@ -2,6 +2,7 @@ using Ling.Audit.SourceGenerators.Helpers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Text;
 
 namespace Ling.Audit.SourceGenerators;
 
@@ -14,14 +15,14 @@ partial class AuditPropertyGenerator
             typeDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword));
     }
 
-    private static (TypeDeclarationSyntax Declaration, EquatableArray<AuditPropertyInfo> Properties) GetTargetForGeneration(GeneratorSyntaxContext context)
+    private static AuditGenerationContext GetGenerationContext(GeneratorSyntaxContext context)
     {
         var typeDeclaration = (TypeDeclarationSyntax)context.Node;
         var semanticModel = context.SemanticModel;
 
         if (semanticModel.GetDeclaredSymbol(typeDeclaration) is not INamedTypeSymbol classSymbol)
         {
-            return (typeDeclaration, EquatableArray<AuditPropertyInfo>.Empty);
+            return new(typeDeclaration, string.Empty, EquatableArray<AuditPropertyInfo>.Empty);
         }
 
         var symbols = new AuditSymbols(semanticModel.Compilation);
@@ -40,7 +41,7 @@ partial class AuditPropertyGenerator
             globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Included,
             typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
             genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
-            miscellaneousOptions: SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier
+            miscellaneousOptions: SymbolDisplayMiscellaneousOptions.ExpandNullable | SymbolDisplayMiscellaneousOptions.IncludeNotNullableReferenceTypeModifier
         );
 
         foreach (var @interface in allInterfaces)
@@ -52,6 +53,7 @@ partial class AuditPropertyGenerator
                 @interface.TypeArguments[0].CanAssignNull())
             {
                 var keyType = @interface.TypeArguments[0].ToDisplayString(format);
+                if (@interface.TypeArguments[0].IsReferenceType) keyType += "?";
                 propertiesToGenerate.Add(AuditPropertyInfo.CreatedBy(keyType));
             }
             else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasCreationTime) &&
@@ -64,6 +66,7 @@ partial class AuditPropertyGenerator
                 @interface.TypeArguments[0].CanAssignNull())
             {
                 var keyType = @interface.TypeArguments[0].ToDisplayString(format);
+                if (@interface.TypeArguments[0].IsReferenceType) keyType += "?";
                 propertiesToGenerate.Add(AuditPropertyInfo.ModifiedBy(keyType));
             }
             else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasLastModificationTime) &&
@@ -81,6 +84,7 @@ partial class AuditPropertyGenerator
                 @interface.TypeArguments[0].CanAssignNull())
             {
                 var keyType = @interface.TypeArguments[0].ToDisplayString(format);
+                if (@interface.TypeArguments[0].IsReferenceType) keyType += "?";
                 propertiesToGenerate.Add(AuditPropertyInfo.DeletedBy(keyType));
             }
             else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasDeletionTime) &&
@@ -90,54 +94,35 @@ partial class AuditPropertyGenerator
             }
         }
 
-        return (typeDeclaration, new(propertiesToGenerate));
+        return new(typeDeclaration, GetNormalizedTypeName(classSymbol), new(propertiesToGenerate));
     }
 
-    private record AuditPropertyInfo(
-        string InterfaceName,
-        string PropertyName,
-        string PropertyType)
+    private static string GetNormalizedTypeName(INamedTypeSymbol namedTypeSymbol)
     {
-        public static AuditPropertyInfo CreatedBy(string keyType) => new(
-            AuditDefaults.IHasCreatorTypeFullQualifiedMetadataName,
-            AuditDefaults.CreatedBy,
-            keyType
-        );
+        var sb = new StringBuilder();
+        
+        if (!string.IsNullOrEmpty(namedTypeSymbol.ContainingNamespace?.ToString()))
+        {
+            sb.Append(namedTypeSymbol.ContainingNamespace).Append('.');
+        }
 
-        public static readonly AuditPropertyInfo CreatedAt = new(
-            AuditDefaults.IHasCreationTimeTypeFullQualifiedMetadataName,
-            AuditDefaults.CreatedAt,
-            "global::System.DateTimeOffset"
-        );
+        BuildTypeFullName(namedTypeSymbol, sb);
+        return sb.ToString();
+    }
 
-        public static AuditPropertyInfo ModifiedBy(string keyType) => new(
-            AuditDefaults.IHasModifierTypeFullQualifiedMetadataName,
-            AuditDefaults.ModifiedBy,
-            keyType
-        );
+    private static void BuildTypeFullName(INamedTypeSymbol symbol, StringBuilder sb)
+    {
+        if (symbol.ContainingType is not null)
+        {
+            BuildTypeFullName(symbol.ContainingType, sb);
+            sb.Append('.');
+        }
 
-        public static readonly AuditPropertyInfo ModifiedAt = new(
-            AuditDefaults.IHasModificationTimeTypeFullQualifiedMetadataName,
-            AuditDefaults.ModifiedAt,
-            "global::System.Nullable<global::System.DateTimeOffset>"
-        );
+        sb.Append(symbol.Name);
 
-        public static readonly AuditPropertyInfo IsDeleted = new(
-            AuditDefaults.ISoftDeleteTypeFullQualifiedMetadataName,
-            AuditDefaults.IsDeleted,
-            "global::System.Boolean"
-        );
-
-        public static AuditPropertyInfo DeletedBy(string keyType) => new(
-            AuditDefaults.IHasDeleterTypeFullQualifiedMetadataName,
-            AuditDefaults.DeletedBy,
-            keyType
-        );
-
-        public static readonly AuditPropertyInfo DeletedAt = new(
-            AuditDefaults.IHasDeletionTimeTypeFullQualifiedMetadataName,
-            AuditDefaults.DeletedAt,
-            "global::System.Nullable<global::System.DateTimeOffset>"
-        );
+        if (symbol.TypeParameters.Length > 0)
+        {
+            sb.Append('_').Append(symbol.TypeParameters.Length);
+        }
     }
 }

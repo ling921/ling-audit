@@ -6,6 +6,8 @@ internal static class ImmutableHelpers
 {
     public static int FindIndex<T>(this ImmutableArray<T> source, Func<T, bool> predicate)
     {
+        if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+
         for (var i = 0; i < source.Length; i++)
         {
             if (predicate(source[i]))

@@ -20,21 +20,21 @@ public sealed partial class AuditPropertyGenerator : IIncrementalGenerator
             .Collect()
             .SelectMany((ctxs, _) => ctxs
                 .GroupBy(ctx => ctx.Node.SyntaxTree)
-                .Select(group => GetTargetForGeneration(group.First()))
-                .Where(result => result.Properties.Length > 0));
+                .Select(group => GetGenerationContext(group.First()))
+                .Where(ctx => ctx.ShouldGenerate));
 
         context.RegisterSourceOutput(declarations, Execute);
     }
 
     private static void Execute(
         SourceProductionContext context,
-        (TypeDeclarationSyntax Declaration, EquatableArray<AuditPropertyInfo> Properties) declarationInfo)
+        AuditGenerationContext generationContext)
     {
-        var (declaration, properties) = declarationInfo;
+        var (declaration, normalizedName, properties) = generationContext;
 
         var generatedCode = GetGeneratedCode(declaration, properties);
         context.AddSource(
-            $"{declaration.Identifier}_{declaration.SyntaxTree.FilePath.GetHashCode():X8}.g.cs",
+            $"{normalizedName}.g.cs",
             generatedCode);
     }
 }
