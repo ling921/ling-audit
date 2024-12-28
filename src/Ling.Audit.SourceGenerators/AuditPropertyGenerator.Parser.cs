@@ -53,7 +53,11 @@ partial class AuditPropertyGenerator
                 @interface.TypeArguments[0].CanAssignNull())
             {
                 var keyType = @interface.TypeArguments[0].ToDisplayString(format);
-                if (@interface.TypeArguments[0].IsReferenceType) keyType += "?";
+                if (@interface.TypeArguments[0].IsReferenceType)
+                {
+                    keyType += "?";
+                }
+
                 propertiesToGenerate.Add(AuditPropertyInfo.CreatedBy(keyType));
             }
             else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasCreationTime) &&
@@ -66,7 +70,11 @@ partial class AuditPropertyGenerator
                 @interface.TypeArguments[0].CanAssignNull())
             {
                 var keyType = @interface.TypeArguments[0].ToDisplayString(format);
-                if (@interface.TypeArguments[0].IsReferenceType) keyType += "?";
+                if (@interface.TypeArguments[0].IsReferenceType)
+                {
+                    keyType += "?";
+                }
+
                 propertiesToGenerate.Add(AuditPropertyInfo.ModifiedBy(keyType));
             }
             else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasModificationTime) &&
@@ -84,7 +92,11 @@ partial class AuditPropertyGenerator
                 @interface.TypeArguments[0].CanAssignNull())
             {
                 var keyType = @interface.TypeArguments[0].ToDisplayString(format);
-                if (@interface.TypeArguments[0].IsReferenceType) keyType += "?";
+                if (@interface.TypeArguments[0].IsReferenceType)
+                {
+                    keyType += "?";
+                }
+
                 propertiesToGenerate.Add(AuditPropertyInfo.DeletedBy(keyType));
             }
             else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasDeletionTime) &&
@@ -100,7 +112,7 @@ partial class AuditPropertyGenerator
     private static string GetNormalizedTypeName(INamedTypeSymbol namedTypeSymbol)
     {
         var sb = new StringBuilder();
-        
+
         if (!string.IsNullOrEmpty(namedTypeSymbol.ContainingNamespace?.ToString()))
         {
             sb.Append(namedTypeSymbol.ContainingNamespace).Append('.');

@@ -1,9 +1,8 @@
-﻿
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
-using Microsoft.CodeAnalysis;
-using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.Text;
+using System.Collections.Immutable;
 using System.Text;
 
 namespace Ling.Audit.SourceGenerators.Tests.Verifiers;

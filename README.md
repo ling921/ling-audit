@@ -1,33 +1,50 @@
 # Ling.Audit [![NuGet](https://img.shields.io/nuget/v/Ling.Audit.svg)](https://www.nuget.org/packages/Ling.Audit/)
 
-A source generator for automatically generating audit properties in C# classes.
+A source generator for automatically implementing audit properties in C# classes.
 
 ## Features
 
-- Automatically generates audit-related properties based on implemented interfaces
-- Supports the following audit properties:
-  - Creation info (`CreatedBy`, `CreatedAt`)
-  - Modification info (`ModifiedBy`, `ModifiedAt`)
-  - Deletion info (`IsDeleted`, `DeletedBy`, `DeletedAt`)
-- Handles nullable reference types properly
-- Zero runtime dependencies
+- 🚀 Zero runtime overhead - all code is generated at compile time
+- 💡 Analyzer and code fixes for better audit interface usage
+- 🔄 Supports inheritance and nested types
+- 🛡️ Full type safety with generic support
+- 📝 XML documentation included
 
-## Installation
+## Quick Start
 
-1. Use .NET CLI:
-```
+```shell
 dotnet add package Ling.Audit
 ```
 
-2. Use NuGet Package Manager:
+```csharp
+// Just implement the interface
+public partial class Post : IFullAudited<int?>
+{
+    public string Title { get; set; }
+    public string Content { get; set; }
+}
 
+// All audit properties are automatically generated
+// - CreatedBy, CreatedAt
+// - LastModifiedBy, LastModifiedAt
+// - IsDeleted, DeletedBy, DeletedAt
 ```
-Install-Package Ling.Audit
-```
 
-## Usage
+## Documentation
 
-See [README.md](src/Ling.Audit/README.md)
+See [detailed documentation](src/Ling.Audit/README.md) for:
+- Available interfaces and properties
+- Advanced usage examples
+- Best practices
+- API reference
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## License
 

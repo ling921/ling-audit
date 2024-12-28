@@ -69,11 +69,15 @@ internal class MustNullAttributeAnalyzer : DiagnosticAnalyzer
     private static void AnalyzeTypeParameterDeclaration(SyntaxNodeAnalysisContext context, TypeParameterSyntax typeParameter)
     {
         if (context.SemanticModel.GetDeclaredSymbol(typeParameter) is not ITypeParameterSymbol typeParameterSymbol)
+        {
             return;
+        }
 
         var mustNullAttribute = GetMustNullAttributeSymbol(context.Compilation);
         if (!HasAttributeSymbol(typeParameterSymbol, mustNullAttribute))
+        {
             return;
+        }
 
         if (typeParameterSymbol.HasValueTypeConstraint || typeParameterSymbol.HasNotNullConstraint)
         {
@@ -136,7 +140,9 @@ internal class MustNullAttributeAnalyzer : DiagnosticAnalyzer
     private static void CheckGenericTypeArguments(SyntaxNodeAnalysisContext context, GenericNameSyntax genericName)
     {
         if (context.SemanticModel.GetSymbolInfo(genericName).Symbol is not INamedTypeSymbol typeSymbol)
+        {
             return;
+        }
 
         var mustNullAttribute = GetMustNullAttributeSymbol(context.Compilation);
 
@@ -179,7 +185,10 @@ internal class MustNullAttributeAnalyzer : DiagnosticAnalyzer
         var originalType = currentType.OriginalDefinition;
         var genericBaseTypes = new List<INamedTypeSymbol>();
         if (originalType is { BaseType.IsGenericType: true })
+        {
             genericBaseTypes.Add(originalType.BaseType);
+        }
+
         genericBaseTypes.AddRange(originalType.Interfaces.Where(t => t.IsGenericType));
 
         foreach (var baseType in genericBaseTypes)

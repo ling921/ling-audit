@@ -16,17 +16,18 @@
   <PropertyGroup>
     <PackageId>Ling.Audit</PackageId>
     <Authors>ling921</Authors>
-    <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/ling921/ling-audit</RepositoryUrl>
-    <Description></Description>
-    <PackageReleaseNotes>Summary of changes made in this release of the package.</PackageReleaseNotes>
-    <Copyright>Copyright © 2024- ling921 All rights reserved.</Copyright>
-    <PackageTags>ling, audit, source-generation, analyzers, codefixes</PackageTags>
-    <NoPackageAnalysis>true</NoPackageAnalysis>
-    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <Description>A source generator for automatically implementing audit properties in C# classes, with analyzer and code fixes support.</Description>
+    <PackageTags>ling;audit;source-generation;analyzers;codefixes</PackageTags>
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <NoPackageAnalysis>true</NoPackageAnalysis>
+
+    <RepositoryUrl>https://github.com/ling921/ling-audit</RepositoryUrl>
+    <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
+    <PackageReleaseNotes>https://github.com/ling921/ling-audit/releases</PackageReleaseNotes>
+    <Copyright>Copyright © 2024- ling921 All rights reserved.</Copyright>
 
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddToOutput</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
@@ -41,19 +42,25 @@
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="all" />
   </ItemGroup>
 
+  <!-- Source Generator -->
   <ItemGroup>
-    <ProjectReference Include="..\Ling.Audit.SourceGenerators\Ling.Audit.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\Ling.Audit.SourceGenerators\Ling.Audit.SourceGenerators.csproj" 
+                      OutputItemType="Analyzer" 
+                      ReferenceOutputAssembly="false" />
   </ItemGroup>
 
+  <!-- Package Content -->
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="" />
+    <None Include="..\..\assets\icon.png" Visible="false" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+  <!-- Source Generator Output -->
   <Target Name="_AddToOutput" BeforeTargets="GetTargetPath">
     <ItemGroup>
-      <TfmSpecificPackageFile Include="$(ProjectDir)..\Ling.Audit.SourceGenerators\bin\$(Configuration)\netstandard2.0\Ling.Audit.SourceGenerators.dll" PackagePath="analyzers/dotnet/cs" />
+      <TfmSpecificPackageFile Include="$(ProjectDir)..\Ling.Audit.SourceGenerators\bin\$(Configuration)\netstandard2.0\Ling.Audit.SourceGenerators.dll" 
+                              PackagePath="analyzers/dotnet/cs" />
     </ItemGroup>
   </Target>
-
-  <ItemGroup>
-    <None Include="README.md" Pack="true" PackagePath="\" />
-    <None Include="..\..\assets\icon.png" Visible="false" Pack="true" PackagePath="\" />
-  </ItemGroup>
 
 </Project>

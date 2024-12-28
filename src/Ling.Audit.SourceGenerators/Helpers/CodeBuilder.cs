@@ -32,7 +32,10 @@ internal sealed class CodeBuilder
     /// </exception>
     public CodeBuilder(int indentSize = 4)
     {
-        if (indentSize <= 0) throw new ArgumentOutOfRangeException(nameof(indentSize));
+        if (indentSize <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(indentSize));
+        }
 
         _indentLevel = 0;
         _newLine = true;
@@ -51,7 +54,10 @@ internal sealed class CodeBuilder
     /// </exception>
     public CodeBuilder(string value, int indentSize = 4)
     {
-        if (indentSize <= 0) throw new ArgumentOutOfRangeException(nameof(indentSize));
+        if (indentSize <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(indentSize));
+        }
 
         _indentLevel = 0;
         _newLine = false;
@@ -85,7 +91,10 @@ internal sealed class CodeBuilder
     /// </exception>
     public CodeBuilder CloseBrace(string? textAfterBrace = null, bool appendSemicolon = false)
     {
-        if (_indentLevel <= 0) throw new InvalidOperationException();
+        if (_indentLevel <= 0)
+        {
+            throw new InvalidOperationException();
+        }
 
         _indentLevel--;
         Append("}");
@@ -197,7 +206,11 @@ internal sealed class CodeBuilder
     /// </exception>
     public CodeBuilder DecreaseIndentLevel()
     {
-        if (_indentLevel <= 0) throw new InvalidOperationException();
+        if (_indentLevel <= 0)
+        {
+            throw new InvalidOperationException();
+        }
+
         _indentLevel--;
         return this;
     }

@@ -23,15 +23,16 @@ internal class MakeNullableCodeFixProvider : CodeFixProvider
     {
         var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
         if (root == null)
+        {
             return;
+        }
 
         var diagnostic = context.Diagnostics[0];
         var diagnosticSpan = diagnostic.Location.SourceSpan;
 
         var node = root.FindNode(diagnosticSpan);
 
-        if (node is TypeSyntax typeNode &&
-            node is not TypeParameterSyntax)
+        if (node is TypeSyntax typeNode)
         {
             context.RegisterCodeFix(
                 CodeAction.Create(
@@ -46,11 +47,15 @@ internal class MakeNullableCodeFixProvider : CodeFixProvider
     {
         var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
         if (root == null)
+        {
             return document;
+        }
 
         var semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
         if (semanticModel == null)
+        {
             return document;
+        }
 
         var typeInfo = semanticModel.GetTypeInfo(typeSyntax, cancellationToken);
         if (typeInfo.Type?.IsValueType != true)

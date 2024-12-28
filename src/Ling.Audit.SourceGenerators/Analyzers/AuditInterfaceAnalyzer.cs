@@ -61,9 +61,7 @@ internal class AuditInterfaceAnalyzer : DiagnosticAnalyzer
             IsImplementedDirectly(symbols.IHasCreationTime, out var c2, out _) &&
             !IsImplementedDirectly(symbols.ICreationAudited, out _, out _))
         {
-            var lastInterface = baseTypes
-                .LastOrDefault(t => IsTargetInterface(t, semanticModel,
-                    symbols.IHasCreator, symbols.IHasCreationTime));
+            var lastInterface = baseTypes[Math.Max(c1, c2)];
 
             if (lastInterface != null)
             {
@@ -80,9 +78,7 @@ internal class AuditInterfaceAnalyzer : DiagnosticAnalyzer
             IsImplementedDirectly(symbols.IHasModificationTime, out var m2, out _) &&
             !IsImplementedDirectly(symbols.IModificationAudited, out _, out _))
         {
-            var lastInterface = baseTypes
-                .LastOrDefault(t => IsTargetInterface(t, semanticModel,
-                    symbols.IHasModifier, symbols.IHasModificationTime));
+            var lastInterface = baseTypes[Math.Max(m1, m2)];
 
             if (lastInterface != null)
             {
@@ -100,9 +96,7 @@ internal class AuditInterfaceAnalyzer : DiagnosticAnalyzer
             IsImplementedDirectly(symbols.IHasDeletionTime, out var d3, out _) &&
             !IsImplementedDirectly(symbols.IDeletionAudited, out _, out _))
         {
-            var lastInterface = baseTypes
-                .LastOrDefault(t => IsTargetInterface(t, semanticModel,
-                    symbols.ISoftDelete, symbols.IHasDeleter, symbols.IHasDeletionTime));
+            var lastInterface = baseTypes[Math.Max(Math.Max(d1, d2), d3)];
 
             if (lastInterface != null)
             {
@@ -121,9 +115,7 @@ internal class AuditInterfaceAnalyzer : DiagnosticAnalyzer
             !IsImplementedDirectly(symbols.IFullAudited, out _, out _) &&
             HasConsistentGenericParameters(creationAudited, modificationAudited, deletionAudited))
         {
-            var lastInterface = baseTypes
-                .LastOrDefault(t => IsTargetInterface(t, semanticModel,
-                    symbols.ICreationAudited, symbols.IModificationAudited, symbols.IDeletionAudited));
+            var lastInterface = baseTypes[Math.Max(Math.Max(f1, f2), f3)];
 
             if (lastInterface != null)
             {
@@ -137,32 +129,24 @@ internal class AuditInterfaceAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    private static bool IsTargetInterface(BaseTypeSyntax baseType, SemanticModel semanticModel, params INamedTypeSymbol?[] targetSymbols)
-    {
-        if (semanticModel.GetTypeInfo(baseType.Type).Type is not INamedTypeSymbol typeSymbol)
-        {
-            return false;
-        }
-
-        return targetSymbols.Any(target =>
-            target != null &&
-            SymbolEqualityComparer.Default.Equals(typeSymbol.OriginalDefinition, target));
-    }
-
     private static bool HasConsistentGenericParameters(
         INamedTypeSymbol? creationAudited,
         INamedTypeSymbol? modificationAudited,
         INamedTypeSymbol? deletionAudited)
     {
         if (creationAudited == null || modificationAudited == null || deletionAudited == null)
+        {
             return false;
+        }
 
         var creationKey = creationAudited.TypeArguments.FirstOrDefault();
         var modificationKey = modificationAudited.TypeArguments.FirstOrDefault();
         var deletionKey = deletionAudited.TypeArguments.FirstOrDefault();
 
         if (creationKey == null || modificationKey == null || deletionKey == null)
+        {
             return false;
+        }
 
         var comparer = new UnderlyingSymbolEqualityComparer();
         return comparer.Equals(creationKey, modificationKey) &&
