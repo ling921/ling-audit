@@ -40,7 +40,7 @@ public class CodeBuilderTests
     {
         var builder = new CodeBuilder();
         builder.AppendLine("Hello");
-        Assert.Equal("Hello\r\n", builder.ToString());
+        Assert.Equal($"Hello{Environment.NewLine}", builder.ToString());
     }
 
     [Fact]
@@ -48,7 +48,7 @@ public class CodeBuilderTests
     {
         var builder = new CodeBuilder();
         builder.OpenBrace();
-        Assert.Equal("{\r\n}\r\n", builder.ToString());
+        Assert.Equal($"{{{Environment.NewLine}}}{Environment.NewLine}", builder.ToString());
     }
 
     [Fact]
@@ -57,7 +57,7 @@ public class CodeBuilderTests
         var builder = new CodeBuilder();
         builder.OpenBrace();
         builder.CloseBrace();
-        Assert.Equal("{\r\n}\r\n", builder.ToString());
+        Assert.Equal($"{{{Environment.NewLine}}}{Environment.NewLine}", builder.ToString());
     }
 
     [Fact]
@@ -66,7 +66,7 @@ public class CodeBuilderTests
         var builder = new CodeBuilder();
         builder.OpenBrace();
         builder.CloseBrace(")");
-        Assert.Equal("{\r\n})\r\n", builder.ToString());
+        Assert.Equal($"{{{Environment.NewLine}}}){Environment.NewLine}", builder.ToString());
     }
 
     [Fact]
@@ -75,7 +75,7 @@ public class CodeBuilderTests
         var builder = new CodeBuilder();
         builder.OpenBrace();
         builder.CloseBrace(null, true);
-        Assert.Equal("{\r\n};\r\n", builder.ToString());
+        Assert.Equal($"{{{Environment.NewLine}}};{Environment.NewLine}", builder.ToString());
     }
 
     [Fact]
@@ -85,7 +85,7 @@ public class CodeBuilderTests
         builder.OpenBrace();
         builder.OpenBrace();
         builder.CloseAllBrace();
-        Assert.Equal("{\r\n    {\r\n    }\r\n}\r\n", builder.ToString());
+        Assert.Equal($"{{{Environment.NewLine}    {{{Environment.NewLine}    }}{Environment.NewLine}}}{Environment.NewLine}", builder.ToString());
     }
 
     [Fact]
@@ -101,7 +101,7 @@ public class CodeBuilderTests
     {
         var builder = new CodeBuilder();
         builder.AppendFormatLine("Hello {0}", "World");
-        Assert.Equal("Hello World\r\n", builder.ToString());
+        Assert.Equal($"Hello World{Environment.NewLine}", builder.ToString());
     }
 
     [Fact]
@@ -110,7 +110,7 @@ public class CodeBuilderTests
         var builder = new CodeBuilder();
         builder.IncreaseIndentLevel();
         builder.Append("Indented");
-        Assert.Equal("    Indented}\r\n", builder.ToString());
+        Assert.Equal($"    Indented}}{Environment.NewLine}", builder.ToString());
     }
 
     [Fact]
@@ -140,6 +140,6 @@ public class CodeBuilderTests
         builder.OpenBrace();
         builder.OpenBrace();
         var result = builder.ToString();
-        Assert.Equal("{\r\n    {\r\n    }\r\n}\r\n", result);
+        Assert.Equal($"{{{Environment.NewLine}    {{{Environment.NewLine}    }}{Environment.NewLine}}}{Environment.NewLine}", result);
     }
 }
