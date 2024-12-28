@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Luanch Debugger": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\..\\samples\\Sample.Console\\Sample.Console.csproj"
+    }
+  }
+}
