@@ -125,11 +125,11 @@ internal class AuditTypeAnalyzer : DiagnosticAnalyzer
             {
                 yield return AuditDefaults.CreatedAt;
             }
-            else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasLastModifier))
+            else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasModifier))
             {
                 yield return AuditDefaults.ModifiedBy;
             }
-            else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasLastModificationTime))
+            else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasModificationTime))
             {
                 yield return AuditDefaults.ModifiedAt;
             }

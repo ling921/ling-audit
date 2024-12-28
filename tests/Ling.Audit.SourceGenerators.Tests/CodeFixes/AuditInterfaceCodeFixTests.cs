@@ -9,9 +9,9 @@ namespace Ling.Audit.SourceGenerators.Tests.CodeFixes;
 public class AuditInterfaceCodeFixTests
 {
     [Fact]
-    public async Task UseCreationAuditedInterface_FixesCode()
+    public async Task ReplaceCreationAuditInterfaces_WithCreationAudited()
     {
-        const string test = """
+        const string source = """
             using Ling.Audit;
             using System;
 
@@ -37,13 +37,13 @@ public class AuditInterfaceCodeFixTests
             .WithLocation(4, 54)
             .WithArguments("ICreationAudited<TKey>");
 
-        await VerifyCS.VerifyCodeFixAsync(test, fixedCode, expected);
+        await VerifyCS.VerifyCodeFixAsync(source, fixedCode, expected);
     }
 
     [Fact]
-    public async Task UseModificationAuditedInterface_FixesCode()
+    public async Task ReplaceModificationAuditInterfaces_WithModificationAudited()
     {
-        const string test = """
+        const string source = """
             using Ling.Audit;
             using System;
 
@@ -69,13 +69,13 @@ public class AuditInterfaceCodeFixTests
             .WithLocation(4, 55)
             .WithArguments("IModificationAudited<TKey>");
 
-        await VerifyCS.VerifyCodeFixAsync(test, fixedCode, expected);
+        await VerifyCS.VerifyCodeFixAsync(source, fixedCode, expected);
     }
 
     [Fact]
-    public async Task UseDeletionAuditedInterface_FixesCode()
+    public async Task ReplaceDeletionAuditInterfaces_WithDeletionAudited()
     {
-        const string test = """
+        const string source = """
             using Ling.Audit;
             using System;
 
@@ -103,13 +103,13 @@ public class AuditInterfaceCodeFixTests
             .WithLocation(4, 67)
             .WithArguments("IDeletionAudited<TKey>");
 
-        await VerifyCS.VerifyCodeFixAsync(test, fixedCode, expected);
+        await VerifyCS.VerifyCodeFixAsync(source, fixedCode, expected);
     }
 
     [Fact]
-    public async Task UseFullAuditedInterface_FixesCode()
+    public async Task ReplaceAllAuditInterfaces_WithFullAudited()
     {
-        const string test = """
+        const string source = """
             using Ling.Audit;
             using System;
 
@@ -145,6 +145,163 @@ public class AuditInterfaceCodeFixTests
             .WithLocation(4, 89)
             .WithArguments("IFullAudited<TKey>");
 
-        await VerifyCS.VerifyCodeFixAsync(test, fixedCode, expected);
+        await VerifyCS.VerifyCodeFixAsync(source, fixedCode, expected);
+    }
+
+    [Fact]
+    public async Task PreserveOtherInterfaces_WhenReplacingAuditInterfaces()
+    {
+        const string source = """
+            using Ling.Audit;
+            using System;
+
+            public partial class MyEntity : IHasCreator<string>, IHasCreationTime, IEntity
+            {
+                public string? CreatedBy { get; set; }
+                public DateTimeOffset CreatedAt { get; set; }
+            }
+
+            public interface IEntity { }
+            """;
+
+        const string fixedCode = """
+            using Ling.Audit;
+            using System;
+
+            public partial class MyEntity : ICreationAudited<string>, IEntity
+            {
+                public string? CreatedBy { get; set; }
+                public DateTimeOffset CreatedAt { get; set; }
+            }
+            
+            public interface IEntity { }
+            """;
+
+        var expected = VerifyCS.Diagnostic(DiagnosticDescriptors.UseAuditedInterface)
+            .WithLocation(4, 54)
+            .WithArguments("ICreationAudited<TKey>");
+
+        await VerifyCS.VerifyCodeFixAsync(source, fixedCode, expected);
+    }
+
+    [Fact]
+    public async Task HandleMultilineInterfaceList_WhenReplacingInterfaces()
+    {
+        const string source = """
+            using Ling.Audit;
+            using System;
+
+            public partial class MyEntity :
+                IHasCreator<string>,
+                IHasCreationTime,
+                ISoftDelete,
+                IHasDeleter<string>,
+                IHasDeletionTime,
+                IEntity
+            {
+            }
+
+            public interface IEntity { }
+            """;
+
+        const string fixedCode = """
+            using Ling.Audit;
+            using System;
+
+            public partial class MyEntity :
+                ICreationAudited<string>,
+                IDeletionAudited<string>,
+                IEntity
+            {
+            }
+            
+            public interface IEntity { }
+            """;
+
+        var expected = VerifyCS.Diagnostic(DiagnosticDescriptors.UseAuditedInterface)
+            .WithLocation(6, 5)
+            .WithArguments("ICreationAudited<TKey>");
+        var expected2 = VerifyCS.Diagnostic(DiagnosticDescriptors.UseAuditedInterface)
+            .WithLocation(9, 5)
+            .WithArguments("IDeletionAudited<TKey>");
+
+        await VerifyCS.VerifyCodeFixAsync(source, fixedCode, 2, expected, expected2);
+    }
+
+    [Fact]
+    public async Task HandleFullyQualifiedNames_WhenReplacingInterfaces()
+    {
+        const string source = """
+            using System;
+
+            public partial class MyEntity :
+                Ling.Audit.ICreationAudited<string>,
+                Ling.Audit.ISoftDelete,
+                Ling.Audit.IHasDeleter<string>,
+                Ling.Audit.IHasDeletionTime
+            {
+            }
+            """;
+
+        const string fixedCode = """
+            using System;
+
+            public partial class MyEntity :
+                Ling.Audit.ICreationAudited<string>,
+                Ling.Audit.IDeletionAudited<string>
+            {
+            }
+            """;
+
+        var expected = VerifyCS.Diagnostic(DiagnosticDescriptors.UseAuditedInterface)
+            .WithLocation(7, 5)
+            .WithArguments("IDeletionAudited<TKey>");
+
+        await VerifyCS.VerifyCodeFixAsync(source, fixedCode, expected);
+    }
+
+    [Fact]
+    public async Task HandleCrossedAuditInterfaces_WhenReplacingInterfaces()
+    {
+        const string source = """
+            using Ling.Audit;
+            using System;
+
+            public partial class MyEntity :
+                IHasCreator<string>,
+                IHasModificationTime,
+                IHasCreationTime,
+                IHasModifier<string>
+            {
+                public string? CreatedBy { get; set; }
+                public DateTimeOffset CreatedAt { get; set; }
+                public string? LastModifiedBy { get; set; }
+                public DateTimeOffset? LastModifiedAt { get; set; }
+            }
+            """;
+
+        const string fixedCode = """
+            using Ling.Audit;
+            using System;
+
+            public partial class MyEntity :
+                ICreationAudited<string>,
+                IModificationAudited<string>
+            {
+                public string? CreatedBy { get; set; }
+                public DateTimeOffset CreatedAt { get; set; }
+                public string? LastModifiedBy { get; set; }
+                public DateTimeOffset? LastModifiedAt { get; set; }
+            }
+            """;
+
+        var expected1 = VerifyCS.Diagnostic(DiagnosticDescriptors.UseAuditedInterface)
+            .WithLocation(7, 5)
+            .WithArguments("ICreationAudited<TKey>");
+        var expected2 = VerifyCS.Diagnostic(DiagnosticDescriptors.UseAuditedInterface)
+            .WithLocation(8, 5)
+            .WithArguments("IModificationAudited<TKey>");
+
+        await VerifyCS.VerifyCodeFixAsync(source, fixedCode, 2, expected1, expected2);
     }
 }

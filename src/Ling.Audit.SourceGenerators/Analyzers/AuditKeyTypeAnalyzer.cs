@@ -37,7 +37,7 @@ internal class AuditKeyTypeAnalyzer : DiagnosticAnalyzer
         var auditInterfaces = typeSymbol.AllInterfaces
             .Where(i =>
                 SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, symbols.IHasCreator) ||
-                SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, symbols.IHasLastModifier) ||
+                SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, symbols.IHasModifier) ||
                 SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, symbols.IHasDeleter))
             .ToList();
 

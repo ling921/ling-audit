@@ -98,15 +98,15 @@ partial class AuditPropertyGenerator
             switch (parent)
             {
                 case ClassDeclarationSyntax classDecl:
-                    types.Insert(0, new TypeDeclaration(classDecl));
+                    types.Add(new TypeDeclaration(classDecl));
                     break;
 
                 case StructDeclarationSyntax structDecl:
-                    types.Insert(0, new TypeDeclaration(structDecl));
+                    types.Add(new TypeDeclaration(structDecl));
                     break;
 
                 case RecordDeclarationSyntax recordDecl:
-                    types.Insert(0, new TypeDeclaration(recordDecl));
+                    types.Add(new TypeDeclaration(recordDecl));
                     break;
 
                 case BaseNamespaceDeclarationSyntax namespaceDecl:
@@ -117,6 +117,7 @@ partial class AuditPropertyGenerator
             parent = parent.Parent;
         }
 
+        types.Reverse();
         return (namespaceName, types);
     }
 }

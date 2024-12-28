@@ -17,6 +17,17 @@
     </PackageReference>
   </ItemGroup>
 
+  <PropertyGroup>
+    <PolySharpIncludeGeneratedTypes>
+      System.Diagnostics.CodeAnalysis.NotNullWhenAttribute;
+      System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute;
+      System.Index;
+      System.Range;
+      System.Runtime.CompilerServices.IsExternalInit;
+      System.Runtime.CompilerServices.RuntimeHelpers.GetSubArray;
+    </PolySharpIncludeGeneratedTypes>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Update="Resources\SR.Designer.cs">
       <DesignTime>True</DesignTime>
@@ -31,11 +42,5 @@
       <LastGenOutput>SR.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-
-  <PropertyGroup>
-    <PolySharpIncludeGeneratedTypes>
-      System.Runtime.CompilerServices.IsExternalInit;
-    </PolySharpIncludeGeneratedTypes>
-  </PropertyGroup>
 
 </Project>

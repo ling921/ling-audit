@@ -3,10 +3,11 @@
 namespace Sample.Console;
 
 public partial class Post :
-    IHasCreator<int?>,
-    IHasCreationTime,
+    EntityBase,
     ISoftDelete,
+    IHasCreator<int?>,
     IHasDeleter<int?>,
+    IHasCreationTime,
     IHasDeletionTime
 {
     public virtual int? CreatedBy { get; set; }
@@ -17,7 +18,8 @@ public partial class Post :
     IHasModificationTime,
     ISoftDelete,
     IHasDeleter<int?>,
-    IHasDeletionTime
-{
+    IHasDeletionTime{
     public virtual int? LastModifiedBy { get; set; }
 }
+
+public class EntityBase { }

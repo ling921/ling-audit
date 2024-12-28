@@ -61,7 +61,7 @@ partial class AuditPropertyGenerator
             {
                 propertiesToGenerate.Add(AuditPropertyInfo.CreatedAt);
             }
-            else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasLastModifier) &&
+            else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasModifier) &&
                 !existingProperties.Contains(AuditDefaults.ModifiedBy) &&
                 @interface.TypeArguments[0].CanAssignNull())
             {
@@ -69,7 +69,7 @@ partial class AuditPropertyGenerator
                 if (@interface.TypeArguments[0].IsReferenceType) keyType += "?";
                 propertiesToGenerate.Add(AuditPropertyInfo.ModifiedBy(keyType));
             }
-            else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasLastModificationTime) &&
+            else if (SymbolEqualityComparer.Default.Equals(originalDefinition, symbols.IHasModificationTime) &&
                 !existingProperties.Contains(AuditDefaults.ModifiedAt))
             {
                 propertiesToGenerate.Add(AuditPropertyInfo.ModifiedAt);

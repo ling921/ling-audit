@@ -25,7 +25,20 @@ internal static class CSharpCodeFixVerifier<TAnalyzer, TCodeFix>
         var test = new Test
         {
             TestCode = source,
+            FixedCode = fixedSource
+        };
+
+        test.ExpectedDiagnostics.AddRange(expected);
+        await test.RunAsync(CancellationToken.None);
+    }
+
+    public static async Task VerifyCodeFixAsync(string source, string fixedSource, int iterationsNumber, params DiagnosticResult[] expected)
+    {
+        var test = new Test
+        {
+            TestCode = source,
             FixedCode = fixedSource,
+            NumberOfFixAllIterations = iterationsNumber
         };
 
         test.ExpectedDiagnostics.AddRange(expected);

@@ -28,28 +28,38 @@ internal class AuditInterfaceAnalyzer : DiagnosticAnalyzer
         var semanticModel = context.SemanticModel;
 
         if (semanticModel.GetDeclaredSymbol(typeDeclaration) is not INamedTypeSymbol typeSymbol ||
-            typeDeclaration.BaseList?.Types is not { } baseTypes)
+            typeDeclaration.BaseList?.Types is not { Count: > 0 } baseTypes)
         {
             return;
         }
 
         var symbols = new AuditSymbols(semanticModel.Compilation);
-        var directlyImplementedInterfaces = baseTypes
+        var directlyImplementedTypes = baseTypes
             .Select(t => semanticModel.GetTypeInfo(t.Type, context.CancellationToken).Type)
             .OfType<INamedTypeSymbol>()
-            .Where(t => t.TypeKind == TypeKind.Interface)
+            //.Where(t => t.TypeKind == TypeKind.Interface)
             .ToList();
 
-        bool HasDirectlyImplemented(INamedTypeSymbol interfaceSymbol, out INamedTypeSymbol? implementedInterface)
+        bool IsImplementedDirectly(INamedTypeSymbol interfaceSymbol, out int index, out INamedTypeSymbol? implementedInterface)
         {
-            implementedInterface = directlyImplementedInterfaces.FirstOrDefault(i =>
-                SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, interfaceSymbol));
-            return implementedInterface != null;
+            for (var i = 0; i < directlyImplementedTypes.Count; i++)
+            {
+                if (SymbolEqualityComparer.Default.Equals(directlyImplementedTypes[i].OriginalDefinition, interfaceSymbol))
+                {
+                    index = i;
+                    implementedInterface = directlyImplementedTypes[i];
+                    return true;
+                }
+            }
+
+            index = -1;
+            implementedInterface = null;
+            return false;
         }
 
-        if (HasDirectlyImplemented(symbols.IHasCreator, out _) &&
-            HasDirectlyImplemented(symbols.IHasCreationTime, out _) &&
-            !HasDirectlyImplemented(symbols.ICreationAudited, out _))
+        if (IsImplementedDirectly(symbols.IHasCreator, out var c1, out _) &&
+            IsImplementedDirectly(symbols.IHasCreationTime, out var c2, out _) &&
+            !IsImplementedDirectly(symbols.ICreationAudited, out _, out _))
         {
             var lastInterface = baseTypes
                 .LastOrDefault(t => IsTargetInterface(t, semanticModel,
@@ -58,37 +68,37 @@ internal class AuditInterfaceAnalyzer : DiagnosticAnalyzer
             if (lastInterface != null)
             {
                 var diagnostic = Diagnostic.Create(
-                    DiagnosticDescriptors.UseAuditedInterface,
-                    lastInterface.GetLocation(),
-                    ImmutableDictionary<string, string?>.Empty.Add("TargetInterface", "ICreationAudited"),
+                    descriptor: DiagnosticDescriptors.UseAuditedInterface,
+                    location: lastInterface.GetLocation(),
+                    properties: BuildProperties("ICreationAudited", c1, c2),
                     "ICreationAudited<TKey>");
                 context.ReportDiagnostic(diagnostic);
             }
         }
 
-        if (HasDirectlyImplemented(symbols.IHasLastModifier, out _) &&
-            HasDirectlyImplemented(symbols.IHasLastModificationTime, out _) &&
-            !HasDirectlyImplemented(symbols.IModificationAudited, out _))
+        if (IsImplementedDirectly(symbols.IHasModifier, out var m1, out _) &&
+            IsImplementedDirectly(symbols.IHasModificationTime, out var m2, out _) &&
+            !IsImplementedDirectly(symbols.IModificationAudited, out _, out _))
         {
             var lastInterface = baseTypes
                 .LastOrDefault(t => IsTargetInterface(t, semanticModel,
-                    symbols.IHasLastModifier, symbols.IHasLastModificationTime));
+                    symbols.IHasModifier, symbols.IHasModificationTime));
 
             if (lastInterface != null)
             {
                 var diagnostic = Diagnostic.Create(
-                    DiagnosticDescriptors.UseAuditedInterface,
-                    lastInterface.GetLocation(),
-                    ImmutableDictionary<string, string?>.Empty.Add("TargetInterface", "IModificationAudited"),
+                    descriptor: DiagnosticDescriptors.UseAuditedInterface,
+                    location: lastInterface.GetLocation(),
+                    properties: BuildProperties("IModificationAudited", m1, m2),
                     "IModificationAudited<TKey>");
                 context.ReportDiagnostic(diagnostic);
             }
         }
 
-        if (HasDirectlyImplemented(symbols.ISoftDelete, out _) &&
-            HasDirectlyImplemented(symbols.IHasDeleter, out _) &&
-            HasDirectlyImplemented(symbols.IHasDeletionTime, out _) &&
-            !HasDirectlyImplemented(symbols.IDeletionAudited, out _))
+        if (IsImplementedDirectly(symbols.ISoftDelete, out var d1, out _) &&
+            IsImplementedDirectly(symbols.IHasDeleter, out var d2, out _) &&
+            IsImplementedDirectly(symbols.IHasDeletionTime, out var d3, out _) &&
+            !IsImplementedDirectly(symbols.IDeletionAudited, out _, out _))
         {
             var lastInterface = baseTypes
                 .LastOrDefault(t => IsTargetInterface(t, semanticModel,
@@ -97,18 +107,18 @@ internal class AuditInterfaceAnalyzer : DiagnosticAnalyzer
             if (lastInterface != null)
             {
                 var diagnostic = Diagnostic.Create(
-                    DiagnosticDescriptors.UseAuditedInterface,
-                    lastInterface.GetLocation(),
-                    ImmutableDictionary<string, string?>.Empty.Add("TargetInterface", "IDeletionAudited"),
+                    descriptor: DiagnosticDescriptors.UseAuditedInterface,
+                    location: lastInterface.GetLocation(),
+                    properties: BuildProperties("IDeletionAudited", d1, d2, d3),
                     "IDeletionAudited<TKey>");
                 context.ReportDiagnostic(diagnostic);
             }
         }
 
-        if (HasDirectlyImplemented(symbols.ICreationAudited, out var creationAudited) &&
-            HasDirectlyImplemented(symbols.IModificationAudited, out var modificationAudited) &&
-            HasDirectlyImplemented(symbols.IDeletionAudited, out var deletionAudited) &&
-            !HasDirectlyImplemented(symbols.IFullAudited, out _) &&
+        if (IsImplementedDirectly(symbols.ICreationAudited, out var f1, out var creationAudited) &&
+            IsImplementedDirectly(symbols.IModificationAudited, out var f2, out var modificationAudited) &&
+            IsImplementedDirectly(symbols.IDeletionAudited, out var f3, out var deletionAudited) &&
+            !IsImplementedDirectly(symbols.IFullAudited, out _, out _) &&
             HasConsistentGenericParameters(creationAudited, modificationAudited, deletionAudited))
         {
             var lastInterface = baseTypes
@@ -118,9 +128,9 @@ internal class AuditInterfaceAnalyzer : DiagnosticAnalyzer
             if (lastInterface != null)
             {
                 var diagnostic = Diagnostic.Create(
-                    DiagnosticDescriptors.UseAuditedInterface,
-                    lastInterface.GetLocation(),
-                    ImmutableDictionary<string, string?>.Empty.Add("TargetInterface", "IFullAudited"),
+                    descriptor: DiagnosticDescriptors.UseAuditedInterface,
+                    location: lastInterface.GetLocation(),
+                    properties: BuildProperties("IFullAudited", f1, f2, f3),
                     "IFullAudited<TKey>");
                 context.ReportDiagnostic(diagnostic);
             }
@@ -157,5 +167,13 @@ internal class AuditInterfaceAnalyzer : DiagnosticAnalyzer
         var comparer = new UnderlyingSymbolEqualityComparer();
         return comparer.Equals(creationKey, modificationKey) &&
                comparer.Equals(modificationKey, deletionKey);
+    }
+
+    private static ImmutableDictionary<string, string?> BuildProperties(string suggestion, params int[] indexes)
+    {
+        var builder = ImmutableDictionary.CreateBuilder<string, string?>();
+        builder.Add("Suggestion", suggestion);
+        builder.Add("Indexes", string.Join(",", indexes.OrderBy(i => i)));
+        return builder.ToImmutable();
     }
 }

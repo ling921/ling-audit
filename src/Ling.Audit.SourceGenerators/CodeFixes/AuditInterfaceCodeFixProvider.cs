@@ -38,107 +38,39 @@ internal class AuditInterfaceCodeFixProvider : CodeFixProvider
         }
 
         var diagnostic = context.Diagnostics[0];
-        if (!diagnostic.Properties.TryGetValue("TargetInterface", out var targetInterface) ||
-            targetInterface is not string { Length: > 0 })
+        if (diagnostic.Properties.GetValueOrDefault("Suggestion") is { Length: > 0 } suggestion &&
+            diagnostic.Properties.GetValueOrDefault("Indexes") is { Length: > 0 } indexesText &&
+            GetIndexes(indexesText) is { Length: > 1 } indexes)
         {
-            return;
+            context.RegisterCodeFix(
+                CodeAction.Create(
+                    title: $"Use {suggestion}<TKey> interface",
+                    createChangedDocument: c => ApplyChanges(context.Document, typeDeclaration, suggestion, indexes, c),
+                    equivalenceKey: suggestion),
+                diagnostic);
         }
-
-        context.RegisterCodeFix(
-            CodeAction.Create(
-                title: $"Use {targetInterface}<TKey> interface",
-                createChangedDocument: c => UseInterfaceAsync(context.Document, typeDeclaration, targetInterface, c),
-                equivalenceKey: targetInterface),
-            diagnostic);
     }
 
-    private async Task<Document> UseInterfaceAsync(Document document, TypeDeclarationSyntax typeDecl, string targetInterface, CancellationToken cancellationToken)
+    private async Task<Document> ApplyChanges(
+        Document document,
+        TypeDeclarationSyntax typeDecl,
+        string targetInterface,
+        int[] indexes,
+        CancellationToken cancellationToken)
     {
         var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
-        if (root == null)
+        if (root is null)
         {
             return document;
         }
 
-        var semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
-        if (semanticModel == null)
-        {
-            return document;
-        }
-
-        var symbols = new AuditSymbols(semanticModel.Compilation);
         var baseList = typeDecl.BaseList;
-        if (baseList == null)
+        if (baseList is null)
         {
             return document;
         }
 
-        // Get interfaces to be removed based on target interface
-        var interfacesToRemove = targetInterface switch
-        {
-            "ICreationAudited" => baseList.Types.Where(t =>
-                IsTargetInterface(t, semanticModel, symbols.IHasCreator, symbols.IHasCreationTime)).ToList(),
-            "IModificationAudited" => baseList.Types.Where(t =>
-                IsTargetInterface(t, semanticModel, symbols.IHasLastModifier, symbols.IHasLastModificationTime)).ToList(),
-            "IDeletionAudited" => baseList.Types.Where(t =>
-                IsTargetInterface(t, semanticModel, symbols.ISoftDelete, symbols.IHasDeleter, symbols.IHasDeletionTime)).ToList(),
-            "IFullAudited" => baseList.Types.Where(t =>
-                IsTargetInterface(t, semanticModel, symbols.ICreationAudited, symbols.IModificationAudited, symbols.IDeletionAudited)).ToList(),
-            _ => []
-        };
-
-        if (!interfacesToRemove.Any())
-        {
-            return document;
-        }
-
-        // Get the position of the first interface to be removed
-        var firstInterface = interfacesToRemove[0];
-        var lastInterface = interfacesToRemove.Last();
-        var insertIndex = baseList.Types.IndexOf(firstInterface);
-
-        // Get generic type parameter from any interface that has one
-        var keyType = GetKeyType(interfacesToRemove.FirstOrDefault(i => i.Type is GenericNameSyntax), semanticModel);
-
-        // Preserve original formatting for each interface
-        var newTypes = new List<BaseTypeSyntax>();
-        var originalTypes = baseList.Types.ToList();
-        var originalSeparators = baseList.Types.GetSeparators().ToList();
-        var newSeparators = new List<SyntaxToken>();
-
-        for (var i = 0; i < originalTypes.Count; i++)
-        {
-            if (i == insertIndex)
-            {
-                // Create new interface with original formatting
-                var newInterface = SyntaxFactory.SimpleBaseType(
-                    SyntaxFactory.ParseTypeName(keyType != null ? $"{targetInterface}<{keyType}>" : targetInterface))
-                    .WithLeadingTrivia(originalTypes[i].GetLeadingTrivia())
-                    .WithTrailingTrivia(lastInterface.GetTrailingTrivia());
-
-                newTypes.Add(newInterface);
-                i += interfacesToRemove.Count - 1;
-
-                // Add separator if not the last element
-                if (i < originalTypes.Count - 1)
-                {
-                    newSeparators.Add(originalSeparators[Math.Min(i, originalSeparators.Count - 1)]);
-                }
-            }
-            else if (!interfacesToRemove.Contains(originalTypes[i]))
-            {
-                newTypes.Add(originalTypes[i]);
-
-                // Add separator if not the last element
-                if (newTypes.Count < originalTypes.Count - interfacesToRemove.Count + 1
-                    && i < originalSeparators.Count)
-                {
-                    newSeparators.Add(originalSeparators[i]);
-                }
-            }
-        }
-
-        var newBaseList = baseList.WithTypes(SyntaxFactory.SeparatedList(newTypes, newSeparators));
+        var newBaseList = ModifyBaseList(baseList, targetInterface, indexes);
 
         // Create new type declaration
         var newTypeDecl = typeDecl.WithBaseList(newBaseList);
@@ -148,24 +80,88 @@ internal class AuditInterfaceCodeFixProvider : CodeFixProvider
         return document.WithSyntaxRoot(newRoot);
     }
 
-    private static string? GetKeyType(BaseTypeSyntax? baseType, SemanticModel semanticModel)
+    private static BaseListSyntax ModifyBaseList(BaseListSyntax baseList, string replacement, int[] indexes)
     {
-        if (baseType?.Type is GenericNameSyntax genericName)
+        var baseTypes = baseList.Types.ToList();
+        var separators = baseList.Types.GetSeparators().ToList();
+        var originalBaseTypeCount = baseTypes.Count;
+
+        BaseTypeSyntax targetBaseType = null!;
+        TypeArgumentListSyntax typeArgumentList = null!;
+
+        for (var j = indexes.Length - 1; j >= 0; j--)
         {
-            return genericName.TypeArgumentList.Arguments.First().ToString();
+            var index = indexes[j];
+            if (index >= originalBaseTypeCount || index < 0)
+            {
+                return baseList;
+            }
+
+            // Get type arguments
+            if (baseTypes[index].Type is GenericNameSyntax genericName)
+            {
+                typeArgumentList = genericName.TypeArgumentList;
+            }
+            else if (baseTypes[index].Type is QualifiedNameSyntax { Right: GenericNameSyntax genericName1 })
+            {
+                typeArgumentList = genericName1.TypeArgumentList;
+            }
+
+            if (j > 0)
+            {
+                // Keep TrailingTrivia for last base type
+                if (index == baseTypes.Count - 1)
+                {
+                    baseTypes[index - 1] = baseTypes[index - 1].WithTrailingTrivia(baseTypes[index].GetTrailingTrivia());
+                }
+
+                baseTypes.RemoveAt(index);
+
+                // Remove separator
+                if (index == separators.Count)
+                {
+                    separators.RemoveAt(index - 1);
+                }
+                else
+                {
+                    separators.RemoveAt(index);
+                }
+            }
+            else
+            {
+                targetBaseType = baseTypes[index];
+            }
         }
-        return null;
+
+        var replaceGenericType = SyntaxFactory.GenericName(SyntaxFactory.Identifier(replacement), typeArgumentList);
+        TypeSyntax typeSyntax = targetBaseType.Type is QualifiedNameSyntax qualifiedName
+            ? qualifiedName.WithRight(replaceGenericType)
+            : replaceGenericType;
+
+        baseTypes[indexes[0]] = SyntaxFactory.SimpleBaseType(typeSyntax).WithTriviaFrom(targetBaseType);
+
+        var typeList = SyntaxFactory.SeparatedList(baseTypes, separators);
+        return baseList.Update(baseList.ColonToken, typeList);
     }
 
-    private static bool IsTargetInterface(BaseTypeSyntax baseType, SemanticModel semanticModel, params INamedTypeSymbol?[] targetSymbols)
+    private static int[]? GetIndexes(string indexes)
     {
-        if (semanticModel.GetTypeInfo(baseType.Type).Type is not INamedTypeSymbol typeSymbol)
+        var arr = indexes.Split(',');
+
+        var arr2 = new int[arr.Length];
+
+        for (int i = 0; i < arr.Length; i++)
         {
-            return false;
+            if (int.TryParse(arr[i], out var index))
+            {
+                arr2[i] = index;
+            }
+            else
+            {
+                return null;
+            }
         }
 
-        return targetSymbols.Any(target =>
-            target != null &&
-            SymbolEqualityComparer.Default.Equals(typeSymbol.OriginalDefinition, target));
+        return arr2;
     }
 }
