@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Ling.Audit.EntityFrameworkCore.Internal.Extensions;
 
-internal class AuditConventionExtension : IDbContextOptionsExtension
+internal sealed class AuditConventionExtension : IDbContextOptionsExtension
 {
     /// <inheritdoc/>
     public DbContextOptionsExtensionInfo Info => new AuditConventionExtensionInfo(this);

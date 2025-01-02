@@ -1,11 +1,11 @@
-﻿using Ling.Audit.EntityFrameworkCore.Extensions;
-using Ling.Audit.EntityFrameworkCore.Internal;
+﻿using Ling.Audit.EntityFrameworkCore.Internal;
+using Ling.Audit.EntityFrameworkCore.Internal.Extensions;
 using Ling.Audit.EntityFrameworkCore.Internal.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System.Diagnostics;
+using Microsoft.Extensions.Logging;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
@@ -43,25 +43,31 @@ public static class ModelBuilderExtensions
     /// Configures enable auditing to be applied to the table this entity is mapped to.
     /// </summary>
     /// <param name="entityTypeBuilder">The builder for the entity type being configured.</param>
-    /// <param name="allowAnonymousOperate">
+    /// <param name="anonymousOperations">
     /// Allowed anonymous operations to the table this entity is mapped to.
     /// </param>
     /// <returns>The same builder instance so that multiple calls can be chained.</returns>
-    public static EntityTypeBuilder IsAuditable(this EntityTypeBuilder entityTypeBuilder, EntityOperationType allowAnonymousOperate = EntityOperationType.None)
+    public static EntityTypeBuilder IsAuditable(this EntityTypeBuilder entityTypeBuilder, EntityOperationType anonymousOperations = EntityOperationType.None)
     {
         ArgumentNullException.ThrowIfNull(entityTypeBuilder);
 
-        entityTypeBuilder.Metadata.SetAnnotation(Constants.IncludeAnnotationName, true);
-        entityTypeBuilder.Metadata.SetAuditMetadata(new AuditMetadata { AllowAnonymousOperate = allowAnonymousOperate });
+        entityTypeBuilder.Metadata.SetAnnotation(Constants.AuditableAnnotationName, true);
+        entityTypeBuilder.Metadata.SetAuditMetadata(new AuditMetadata { AnonymousOperations = anonymousOperations });
 
         return entityTypeBuilder;
     }
 
     /// <inheritdoc cref="IsAuditable(EntityTypeBuilder, EntityOperationType)"/>
     /// <typeparam name="TEntity">The entity type being configured.</typeparam>
-    public static EntityTypeBuilder<TEntity> IsAuditable<TEntity>(this EntityTypeBuilder<TEntity> entityTypeBuilder, EntityOperationType allowAnonymousOperate = EntityOperationType.None)
+    public static EntityTypeBuilder<TEntity> IsAuditable<TEntity>(this EntityTypeBuilder<TEntity> entityTypeBuilder, EntityOperationType anonymousOperations = EntityOperationType.None)
         where TEntity : class
-        => (EntityTypeBuilder<TEntity>)((EntityTypeBuilder)entityTypeBuilder).IsAuditable(allowAnonymousOperate);
+    {
+        EntityTypeBuilder builder = entityTypeBuilder;
+
+        builder.IsAuditable(anonymousOperations);
+
+        return entityTypeBuilder;
+    }
 
     /// <summary>
     /// Configures whether to apply auditing to the column.
@@ -73,14 +79,58 @@ public static class ModelBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(propertyBuilder);
 
-        propertyBuilder.Metadata.SetAnnotation(Constants.IncludeAnnotationName, enabled);
+        propertyBuilder.Metadata.SetAnnotation(Constants.AuditableAnnotationName, enabled);
         return propertyBuilder;
     }
 
     /// <inheritdoc cref="IsAuditable(PropertyBuilder, bool)"/>
     /// <typeparam name="TProperty">The type of the property being configured.</typeparam>
     public static PropertyBuilder<TProperty> IsAuditable<TProperty>(this PropertyBuilder<TProperty> propertyBuilder, bool enabled = false)
-        => (PropertyBuilder<TProperty>)((PropertyBuilder)propertyBuilder).IsAuditable(enabled);
+    {
+        PropertyBuilder builder = propertyBuilder;
+
+        builder.IsAuditable(enabled);
+
+        return propertyBuilder;
+    }
+
+    /// <summary>
+    /// Configures the table names for audit log entities.
+    /// </summary>
+    /// <param name="builder">The model builder.</param>
+    /// <param name="entityChangeLogTableName">The table name for entity change logs.</param>
+    /// <param name="fieldChangeLogTableName">The table name for field change logs.</param>
+    /// <returns>The same builder instance so that multiple calls can be chained.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when audit log entity types are not found in the model.</exception>
+    /// <exception cref="ArgumentException">Thrown when table names is null or whitespaces.</exception>
+    public static ModelBuilder ConfigureAuditLogTableNames(
+        this ModelBuilder builder,
+        string entityChangeLogTableName,
+        string fieldChangeLogTableName)
+    {
+        ThrowHelper.ThrowIfNull(builder);
+        ThrowHelper.ThrowIfNullOrWhiteSpace(entityChangeLogTableName);
+        ThrowHelper.ThrowIfNullOrWhiteSpace(fieldChangeLogTableName);
+
+        var entityLogType = builder.Model.GetEntityTypes()
+            .FirstOrDefault(e => e.ClrType.IsGenericType && e.ClrType.GetGenericTypeDefinition() == typeof(AuditEntityChangeLog<>))
+            ?.ClrType
+            ?? throw new InvalidOperationException("'AuditEntityChangeLog<TKey>' entity type not found. Please ensure you have called 'UseAudit()' when configuring your DbContext.");
+
+        builder.Entity(entityLogType)
+            .ToTable(entityChangeLogTableName);
+
+        var fieldLogType = builder.Model.GetEntityTypes()
+            .FirstOrDefault(e => e.ClrType == typeof(AuditFieldChangeLog))
+            ?.ClrType
+            ?? throw new InvalidOperationException(
+                "'AuditFieldChangeLog' entity type not found. Please ensure you have called 'UseAudit()' when configuring your DbContext.");
+
+        builder.Entity(fieldLogType)
+            .ToTable(fieldChangeLogTableName);
+
+        return builder;
+    }
 
     #endregion Public Methods
 
@@ -99,102 +149,92 @@ public static class ModelBuilderExtensions
     /// Configure properties of auditable entities.
     /// </summary>
     /// <param name="builder">Entity model builder.</param>
-    /// <param name="options"></param>
+    /// <param name="options">Audit options to configure the behavior of audited entities.</param>
+    /// <param name="logger">Logger to log the configuration process.</param>
     /// <returns>The identity type of user for current <see cref="DbContext"/>.</returns>
-    internal static Type? ConfigureAuditableEntities(this ModelBuilder builder, AuditOptions options)
+    internal static Type? ConfigureAuditableEntities(this ModelBuilder builder, AuditOptions options, ILogger logger)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(options);
+
         Type? userIdType = options.UserIdType;
-        Type? entityClrType = null;
+        logger.LogInformation("Starting to configure auditable entities. Initial user ID type: {UserIdType}",
+            userIdType?.GetFriendlyName() ?? "null");
+
         foreach (var entityType in builder.Model.GetEntityTypes())
         {
-            var type = entityType.ClrType;
-            var auditMetadata = entityType.GetAuditMetadata();
+            var metadata = new AuditMetadata();
+            var entityClrType = entityType.ClrType;
+            var entityName = entityClrType.GetFriendlyName();
 
-            if (entityType.HasProperty(Constants.Id, out var propertyType))
+            logger.LogDebug("Configuring audit properties for entity: {EntityName}", entityName);
+
+            // Configure creation audit properties
+            if (entityType.HasProperty(Constants.CreatedAt, out var createdAtType))
             {
-                builder.Entity(type)
-                    .Property(propertyType, Constants.Id)
-                    .HasColumnOrder(0)
-                    .HasComment(options.Comments.Id);
+                ValidatePropertyType(entityClrType, Constants.CreatedAt, createdAtType, typeof(DateTimeOffset));
+                ConfigureProperty(builder, entityClrType, createdAtType, Constants.CreatedAt, 991, options.Comments.CreatedAt);
+                metadata.HasCreatedAt = true;
             }
 
-            if (entityType.HasProperty(Constants.CreatedAt, out propertyType))
+            if (entityType.HasProperty(Constants.CreatedBy, out var createdByType))
             {
-                builder.Entity(type)
-                    .Property(propertyType, Constants.CreatedAt)
-                    .HasColumnOrder(991)
-                    .HasComment(options.Comments.CreatedAt);
-
-                CheckDateTimeOffset(type, Constants.CreatedAt, propertyType);
-                auditMetadata.HasCreatedAt = true;
-            }
-            if (entityType.HasProperty(Constants.CreatedBy, out var cUserIdType))
-            {
-                builder.Entity(type)
-                    .Property(cUserIdType, Constants.CreatedBy)
-                    .HasColumnOrder(992)
-                    .HasComment(options.Comments.CreatedBy);
-
-                CheckAndAssign(ref entityClrType, ref userIdType, type, cUserIdType);
-                auditMetadata.UserIdType = cUserIdType;
-                auditMetadata.HasCreatedBy = true;
+                ValidateAndUpdateUserIdType(entityClrType, Constants.CreatedBy, createdByType, ref userIdType);
+                ConfigureProperty(builder, entityClrType, createdByType, Constants.CreatedBy, 992, options.Comments.CreatedBy);
+                metadata.HasCreatedBy = true;
+                metadata.UserIdType = createdByType;
             }
 
-            if (entityType.HasProperty(Constants.ModifiedAt, out propertyType))
+            // Configure modification audit properties
+            if (entityType.HasProperty(Constants.ModifiedAt, out var modifiedAtType))
             {
-                builder.Entity(type)
-                    .Property(propertyType, Constants.ModifiedAt)
-                    .HasColumnOrder(994)
-                    .HasComment(options.Comments.ModifiedAt);
-
-                CheckDateTimeOffset(type, Constants.ModifiedAt, propertyType);
-                auditMetadata.HasModifiedAt = true;
-            }
-            if (entityType.HasProperty(Constants.ModifiedBy, out var mUserIdType))
-            {
-                builder.Entity(type)
-                    .Property(mUserIdType, Constants.ModifiedBy)
-                    .HasColumnOrder(995)
-                    .HasComment(options.Comments.ModifiedBy);
-
-                CheckAndAssign(ref entityClrType, ref userIdType, type, mUserIdType);
-                auditMetadata.UserIdType = mUserIdType;
-                auditMetadata.HasModifiedBy = true;
+                ValidatePropertyType(entityClrType, Constants.ModifiedAt, modifiedAtType, typeof(DateTimeOffset?));
+                ConfigureProperty(builder, entityClrType, modifiedAtType, Constants.ModifiedAt, 994, options.Comments.ModifiedAt);
+                metadata.HasModifiedAt = true;
             }
 
-            if (entityType.HasProperty(Constants.IsDeleted, out propertyType))
+            if (entityType.HasProperty(Constants.ModifiedBy, out var modifiedByType))
             {
-                builder.Entity(type)
-                    .Property(propertyType, Constants.IsDeleted)
-                    .HasColumnOrder(997)
-                    .HasComment(options.Comments.IsDeleted);
-
-                CheckBoolean(type, Constants.IsDeleted, propertyType);
-                auditMetadata.HasIsDeleted = true;
-            }
-            if (entityType.HasProperty(Constants.DeletedAt, out propertyType))
-            {
-                builder.Entity(type)
-                    .Property(propertyType, Constants.DeletedAt)
-                    .HasColumnOrder(998)
-                    .HasComment(options.Comments.DeletedAt);
-
-                CheckDateTimeOffset(type, Constants.DeletedAt, propertyType);
-                auditMetadata.HasDeletedAt = true;
-            }
-            if (entityType.HasProperty(Constants.DeletedBy, out var dUserIdType))
-            {
-                builder.Entity(type)
-                    .Property(dUserIdType, Constants.DeletedBy)
-                    .HasColumnOrder(999)
-                    .HasComment(options.Comments.DeletedBy);
-
-                CheckAndAssign(ref entityClrType, ref userIdType, type, dUserIdType);
-                auditMetadata.UserIdType = dUserIdType;
-                auditMetadata.HasDeletedBy = true;
+                ValidateAndUpdateUserIdType(entityClrType, Constants.ModifiedBy, modifiedByType, ref userIdType);
+                ConfigureProperty(builder, entityClrType, modifiedByType, Constants.ModifiedBy, 995, options.Comments.ModifiedBy);
+                metadata.HasModifiedBy = true;
+                metadata.UserIdType = modifiedByType;
             }
 
-            entityType.SetAuditMetadata(auditMetadata);
+            // Configure deletion audit properties
+            if (entityType.HasProperty(Constants.IsDeleted, out var isDeletedType))
+            {
+                ValidatePropertyType(entityClrType, Constants.IsDeleted, isDeletedType, typeof(bool));
+                ConfigureProperty(builder, entityClrType, isDeletedType, Constants.IsDeleted, 997, options.Comments.IsDeleted);
+                metadata.HasIsDeleted = true;
+            }
+
+            if (entityType.HasProperty(Constants.DeletedAt, out var deletedAtType))
+            {
+                ValidatePropertyType(entityClrType, Constants.DeletedAt, deletedAtType, typeof(DateTimeOffset?));
+                ConfigureProperty(builder, entityClrType, deletedAtType, Constants.DeletedAt, 998, options.Comments.DeletedAt);
+                metadata.HasDeletedAt = true;
+            }
+
+            if (entityType.HasProperty(Constants.DeletedBy, out var deletedByType))
+            {
+                ValidateAndUpdateUserIdType(entityClrType, Constants.DeletedBy, deletedByType, ref userIdType);
+                ConfigureProperty(builder, entityClrType, deletedByType, Constants.DeletedBy, 999, options.Comments.DeletedBy);
+                metadata.HasDeletedBy = true;
+                metadata.UserIdType = deletedByType;
+            }
+
+            entityType.SetAuditMetadata(metadata);
+
+            logger.LogDebug("Configured audit metadata for {EntityName}: CreatedAt={HasCreatedAt}, CreatedBy={HasCreatedBy}, ModifiedAt={HasModifiedAt}, ModifiedBy={HasModifiedBy}, IsDeleted={HasIsDeleted}, DeletedAt={HasDeletedAt}, DeletedBy={HasDeletedBy}",
+                entityName,
+                metadata.HasCreatedAt,
+                metadata.HasCreatedBy,
+                metadata.HasModifiedAt,
+                metadata.HasModifiedBy,
+                metadata.HasIsDeleted,
+                metadata.HasDeletedAt,
+                metadata.HasDeletedBy);
 
 #if NET6_0
             if (IsDesignTime)
@@ -202,27 +242,22 @@ public static class ModelBuilderExtensions
             if (EF.IsDesignTime)
 #endif
             {
-                Debug.WriteLine("Currently running in design time.");
+                logger.LogDebug("Running in design time, removing audit metadata for entity {EntityName}", entityName);
                 entityType.RemoveAnnotation(Constants.MetadataAnnotationName);
             }
         }
 
+        logger.LogInformation("Completed configuring auditable entities. Final user ID type: {UserIdType}",
+            userIdType?.GetFriendlyName() ?? "null");
+
         return userIdType;
     }
 
-    internal static bool GetAuditInclude(this IReadOnlyAnnotatable annotatable)
-    {
-        ArgumentNullException.ThrowIfNull(annotatable);
-
-        var value = annotatable.FindAnnotation(Constants.IncludeAnnotationName)?.Value;
-        return annotatable switch
-        {
-            IEntityType => value is not null && (bool)value, // Entity auditable defaults to false
-            IProperty => value is null || (bool)value, // Entity property or field auditable defaults to true
-            _ => throw new InvalidOperationException()
-        };
-    }
-
+    /// <summary>
+    /// Sets the audit metadata for the specified entity type.
+    /// </summary>
+    /// <param name="entityType">The entity type to set the audit metadata for.</param>
+    /// <param name="metadata">The audit metadata to set.</param>
     internal static void SetAuditMetadata(this IMutableEntityType entityType, AuditMetadata metadata)
     {
         ArgumentNullException.ThrowIfNull(entityType);
@@ -230,8 +265,7 @@ public static class ModelBuilderExtensions
 
         if (entityType.FindAnnotation(Constants.MetadataAnnotationName)?.Value is AuditMetadata original)
         {
-            original.Append(metadata);
-            entityType.SetAnnotation(Constants.MetadataAnnotationName, original);
+            entityType.SetAnnotation(Constants.MetadataAnnotationName, original | metadata);
         }
         else
         {
@@ -239,6 +273,11 @@ public static class ModelBuilderExtensions
         }
     }
 
+    /// <summary>
+    /// Gets the audit metadata for the specified entity type.
+    /// </summary>
+    /// <param name="entityType">The entity type to get the audit metadata for.</param>
+    /// <returns>The audit metadata for the specified entity type.</returns>
     internal static AuditMetadata GetAuditMetadata(this IReadOnlyAnnotatable entityType)
     {
         ArgumentNullException.ThrowIfNull(entityType);
@@ -248,69 +287,111 @@ public static class ModelBuilderExtensions
             : new AuditMetadata();
     }
 
+    /// <summary>
+    /// Gets whether auditing is included for the specified annotatable.
+    /// </summary>
+    /// <param name="annotatable">The annotatable to check.</param>
+    /// <returns><see langword="true"/> if auditing is included; otherwise, <see langword="false"/>.</returns>
+    internal static bool GetAuditInclude(this IReadOnlyAnnotatable annotatable)
+    {
+        ArgumentNullException.ThrowIfNull(annotatable);
+
+        var value = annotatable.FindAnnotation(Constants.AuditableAnnotationName)?.Value;
+        return annotatable switch
+        {
+            IEntityType => value is true,   // Entity auditable defaults to false
+            IProperty => value is false,    // Entity property or field auditable defaults to true
+            _ => throw new InvalidOperationException()
+        };
+    }
+
     #endregion Internal Methods
 
     #region Private Methods
 
-    private static void CheckAndAssign(ref Type? entityType, ref Type? userIdType, Type currentEntityType, Type currenTUserIdtype)
-    {
-        if (userIdType is null)
-        {
-            entityType = currentEntityType;
-            userIdType = currenTUserIdtype;
-        }
-        else if (userIdType != currenTUserIdtype)
-        {
-            const string msg = "All audit entities in the same 'DbContext' cannot have different user's identity types.";
-            var desc = entityType == currentEntityType
-                ? string.Format(
-                    "Entity type '{0}' has both type '{1}' and type '{2}' as user's identity type.",
-                    currentEntityType.GetFriendlyName(),
-                    userIdType.GetFriendlyName(),
-                    currenTUserIdtype.GetFriendlyName())
-                : string.Format(
-                    "Entity type '{0}' has type '{1}' as user key type but entity '{2}' has type '{3}' as user's identity type.",
-                    entityType!.GetFriendlyName(),
-                    userIdType.GetFriendlyName(),
-                    currentEntityType.GetFriendlyName(),
-                    currenTUserIdtype.GetFriendlyName());
-            throw new InvalidOperationException($"{msg} {desc}");
-        }
-    }
-
-    private static void CheckDateTimeOffset(Type currentEntityType, string propertyName, Type propertyType)
-    {
-        if (!propertyType.IsAssignableFrom(typeof(DateTimeOffset)))
-        {
-            throw new InvalidOperationException(string.Format(
-                "Type '{2}' of member '{1}' in entity type '{0}' is neither 'DateTimeOffset' nor 'DateTimeOffset?'.",
-                currentEntityType.GetFriendlyName(),
-                propertyName,
-                propertyType.GetFriendlyName()));
-        }
-    }
-
-    private static void CheckBoolean(Type currentEntityType, string propertyName, Type propertyType)
-    {
-        if (!propertyType.IsAssignableFrom(typeof(bool)))
-        {
-            throw new InvalidOperationException(string.Format(
-                "Type '{2}' of member '{1}' in entity type '{0}' is not 'bool'.",
-                currentEntityType.GetFriendlyName(),
-                propertyName,
-                propertyType.GetFriendlyName()));
-        }
-    }
-
+    /// <summary>
+    /// Checks if the entity type has the specified property.
+    /// </summary>
+    /// <param name="entityType">The entity type to check.</param>
+    /// <param name="propertyName">The name of the property to check for.</param>
+    /// <returns><see langword="true"/> if the entity type has the specified property; otherwise, <see langword="false"/>.</returns>
     private static bool HasProperty(this IMutableEntityType entityType, string propertyName)
     {
         return entityType.FindProperty(propertyName) is not null;
     }
 
+    /// <summary>
+    /// Checks if the entity type has the specified property and gets its type.
+    /// </summary>
+    /// <param name="entityType">The entity type to check.</param>
+    /// <param name="propertyName">The name of the property to check for.</param>
+    /// <param name="type">When this method returns, contains the type of the property, if found; otherwise, <see langword="null"/>.</param>
+    /// <returns><see langword="true"/> if the entity type has the specified property; otherwise, <see langword="false"/>.</returns>
     private static bool HasProperty(this IMutableEntityType entityType, string propertyName, [NotNullWhen(true)] out Type? type)
     {
         type = entityType.FindProperty(propertyName)?.ClrType;
         return type is not null;
+    }
+
+    /// <summary>
+    /// Configures the specified property for the specified entity type.
+    /// </summary>
+    /// <param name="builder">The model builder.</param>
+    /// <param name="entityType">The entity type to configure the property for.</param>
+    /// <param name="propertyType">The type of the property to configure.</param>
+    /// <param name="propertyName">The name of the property to configure.</param>
+    /// <param name="columnOrder">The order of the column in the table.</param>
+    /// <param name="comment">The comment for the property.</param>
+    private static void ConfigureProperty(
+        ModelBuilder builder,
+        Type entityType,
+        Type propertyType,
+        string propertyName,
+        int columnOrder,
+        string comment)
+    {
+        builder.Entity(entityType)
+            .Property(propertyType, propertyName)
+            .HasColumnOrder(columnOrder)
+            .HasComment(comment);
+    }
+
+    /// <summary>
+    /// Validates the type of the specified property.
+    /// </summary>
+    /// <param name="entityClrType">The CLR type of the entity.</param>
+    /// <param name="propertyName">The name of the property to validate.</param>
+    /// <param name="propertyType">The type of the property to validate.</param>
+    /// <param name="targetType">The expected type of the property.</param>
+    /// <exception cref="InvalidOperationException">Thrown when the property type does not match the expected type.</exception>
+    private static void ValidatePropertyType(Type entityClrType, string propertyName, Type propertyType, Type targetType)
+    {
+        if (!propertyType.IsAssignableTo(targetType))
+        {
+            throw new InvalidOperationException(
+                $"Property '{propertyName}' in entity '{entityClrType.GetFriendlyName()}' must be of type {targetType.Name}");
+        }
+    }
+
+    /// <summary>
+    /// Validates and updates the user ID type.
+    /// </summary>
+    /// <param name="entityClrType">The CLR type of the entity.</param>
+    /// <param name="propertyName">The name of the property to validate.</param>
+    /// <param name="propertyType">The type of the property to validate.</param>
+    /// <param name="userIdType">The user ID type to update.</param>
+    /// <exception cref="InvalidOperationException">Thrown when the user ID type does not match the expected type.</exception>
+    private static void ValidateAndUpdateUserIdType(Type entityClrType, string propertyName, Type propertyType, ref Type? userIdType)
+    {
+        if (userIdType is null)
+        {
+            userIdType = propertyType;
+        }
+        else if (userIdType != propertyType)
+        {
+            throw new InvalidOperationException(
+                $"User ID type mismatch in entity '{entityClrType.GetFriendlyName()}.{propertyName}'. Expected '{userIdType.GetFriendlyName()}' but found '{propertyType.GetFriendlyName()}'.");
+        }
     }
 
     #endregion Private Methods

@@ -20,6 +20,9 @@ public class AuditFieldChangeLog
     /// </summary>
     public string FieldName { get; set; } = default!;
 
+    /// <summary>
+    /// Gets or sets the type of the value.
+    /// </summary>
     public string ValueType { get; set; } = default!;
 
     /// <summary>

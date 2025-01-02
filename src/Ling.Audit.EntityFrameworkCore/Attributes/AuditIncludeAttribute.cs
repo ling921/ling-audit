@@ -1,13 +1,22 @@
 ﻿namespace Ling.Audit.EntityFrameworkCore;
 
 /// <summary>
-/// Indicates that the entity is automatically audited.
+/// Specifies that an entity class should be included in automatic auditing.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
 public class AuditIncludeAttribute : Attribute
 {
     /// <summary>
-    /// Gets or sets the operation type that allows anonymous.
+    /// Initializes a new instance of the <see cref="AuditIncludeAttribute"/> class with specified anonymous operations.
     /// </summary>
-    public EntityOperationType AllowAnonymousOperate { get; init; } = EntityOperationType.None;
+    /// <param name="anonymousOperations">The operations that can be performed without authentication.</param>
+    public AuditIncludeAttribute(EntityOperationType anonymousOperations = EntityOperationType.None)
+    {
+        AnonymousOperations = anonymousOperations;
+    }
+
+    /// <summary>
+    /// Gets the operations that can be performed without authentication.
+    /// </summary>
+    public EntityOperationType AnonymousOperations { get; }
 }

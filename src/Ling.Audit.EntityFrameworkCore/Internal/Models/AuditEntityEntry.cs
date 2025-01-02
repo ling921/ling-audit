@@ -5,40 +5,51 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 namespace Ling.Audit.EntityFrameworkCore.Internal.Models;
 
 /// <summary>
-/// Represents audit change information for an <see cref="EntityEntry"/>.
+/// Represents an entity entry for auditing purposes, containing temporary tracking information
+/// before and during the save operation.
 /// </summary>
-internal sealed class AuditEntry
+internal sealed class AuditEntityEntry
 {
     /// <summary>
-    /// Gets the original <see cref="EntityEntry"/>.
+    /// Gets the original entity entry.
     /// </summary>
     public EntityEntry EntityEntry { get; }
 
+    /// <summary>
+    /// Gets the database schema name.
+    /// </summary>
     public string? Schema { get; }
 
+    /// <summary>
+    /// Gets the database table name.
+    /// </summary>
     public string? Table { get; }
 
     /// <summary>
-    /// Gets or sets the primary key of the <see cref="EntityEntry"/>.
+    /// Gets the primary key value of the entity.
     /// </summary>
     public string PrimaryKey => EntityEntry.GetPrimaryKey();
 
     /// <summary>
-    /// Gets or sets the type of the <see cref="EntityEntry"/>.
+    /// Gets or sets the entity type name.
     /// </summary>
     public string EntityType { get; set; } = default!;
 
     /// <summary>
-    /// Gets or sets the changed type of the <see cref="EntityEntry"/>.
+    /// Gets or sets the type of change event.
     /// </summary>
     public AuditEventType EventType { get; set; }
 
     /// <summary>
-    /// Gets or sets all changed properties information for the <see cref="EntityEntry"/>.
+    /// Gets or sets the collection of property changes.
     /// </summary>
     public List<AuditPropertyEntry> Properties { get; set; } = new();
 
-    public AuditEntry(EntityEntry entry)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AuditEntityEntry"/> class.
+    /// </summary>
+    /// <param name="entry">The entity entry being audited.</param>
+    public AuditEntityEntry(EntityEntry entry)
     {
         EntityEntry = entry;
         Schema = entry.Metadata.GetSchema();

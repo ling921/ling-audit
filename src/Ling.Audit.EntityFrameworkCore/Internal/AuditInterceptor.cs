@@ -1,5 +1,4 @@
-﻿using Ling.Audit.EntityFrameworkCore.Extensions;
-using Ling.Audit.EntityFrameworkCore.Internal.Extensions;
+﻿using Ling.Audit.EntityFrameworkCore.Internal.Extensions;
 using Ling.Audit.EntityFrameworkCore.Internal.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -14,7 +13,7 @@ namespace Ling.Audit.EntityFrameworkCore.Internal;
 
 internal sealed class AuditInterceptor<TUserId> : SaveChangesInterceptor, IDisposable
 {
-    private IReadOnlyList<AuditEntry>? _entries;
+    private IReadOnlyList<AuditEntityEntry>? _entries;
 
     /// <inheritdoc/>
     public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
@@ -67,7 +66,7 @@ internal sealed class AuditInterceptor<TUserId> : SaveChangesInterceptor, IDispo
         var userProvider = context.GetService<IAuditContextProvider<TUserId>>();
         var logger = context.GetService<ILoggerFactory>().CreateLogger(GetType());
         var options = context.GetAuditOptions();
-        var entries = new List<AuditEntry>();
+        var entries = new List<AuditEntityEntry>();
         var now = DateTimeOffset.Now;
         var isUserIdDefaultValue = EqualityComparer<TUserId>.Default.Equals(userProvider.Id, default);
 
@@ -77,15 +76,6 @@ internal sealed class AuditInterceptor<TUserId> : SaveChangesInterceptor, IDispo
             var metadata = entityEntry.Metadata.GetAuditMetadata();
             var eventType = AuditEventType.None;
             var userId = isUserIdDefaultValue ? null : userProvider.Id.ConvertToTargetType(metadata.UserIdType);
-
-            if (typeof(TUserId).IsSameTypeIgnoreNullableTo(metadata.UserIdType))
-            {
-                logger.LogError(
-                    "The type of 'TUserId' configured is '{UserIdType}', but entity's user key type is '{entityType}'.",
-                    typeof(TUserId),
-                    metadata.UserIdType);
-                throw new InvalidOperationException($"The type of 'TUserId' configured is not match entity [{entityType}].");
-            }
 
             switch (entityEntry.State)
             {
@@ -98,7 +88,7 @@ internal sealed class AuditInterceptor<TUserId> : SaveChangesInterceptor, IDispo
                     if (metadata.HasDeletedBy)
                     {
                         if (!options.AllowAnonymousDelete &&
-                            !metadata.IsAllowedAnonymousOperate(EntityOperationType.Delete) &&
+                            !metadata.AllowsAnonymousOperation(EntityOperationType.Delete) &&
                             isUserIdDefaultValue)
                         {
                             logger.LogError("Not allowed to delete entity '{entityType}' with anonymous user.", entityType);
@@ -127,7 +117,7 @@ internal sealed class AuditInterceptor<TUserId> : SaveChangesInterceptor, IDispo
                     if (metadata.HasModifiedBy)
                     {
                         if (!options.AllowAnonymousModify &&
-                            !metadata.IsAllowedAnonymousOperate(EntityOperationType.Update) &&
+                            !metadata.AllowsAnonymousOperation(EntityOperationType.Update) &&
                             isUserIdDefaultValue)
                         {
                             logger.LogError("Not allowed to modify entity '{entityType}' with anonymous user.", entityType);
@@ -147,7 +137,7 @@ internal sealed class AuditInterceptor<TUserId> : SaveChangesInterceptor, IDispo
                     if (metadata.HasCreatedBy)
                     {
                         if (!options.AllowAnonymousCreate &&
-                            !metadata.IsAllowedAnonymousOperate(EntityOperationType.Create) &&
+                            !metadata.AllowsAnonymousOperation(EntityOperationType.Create) &&
                             isUserIdDefaultValue)
                         {
                             logger.LogError("Not allowed to create entity '{entityType}' with anonymous user.", entityType);
@@ -171,7 +161,7 @@ internal sealed class AuditInterceptor<TUserId> : SaveChangesInterceptor, IDispo
             }
         }
 
-        if (!AppContext.TryGetSwitch(AuditDefaults.DisabledSwitchKey, out var disabled) || !disabled)
+        if (!AppContext.TryGetSwitch(AuditDefaults.DisableAuditingSwitch, out var disabled) || !disabled)
         {
             _entries = entries;
         }
@@ -181,7 +171,7 @@ internal sealed class AuditInterceptor<TUserId> : SaveChangesInterceptor, IDispo
     {
         var context = eventData.Context;
 
-        if (context is null || (AppContext.TryGetSwitch(AuditDefaults.DisabledSwitchKey, out var disabled) && disabled)) return 0;
+        if (context is null || (AppContext.TryGetSwitch(AuditDefaults.DisableAuditingSwitch, out var disabled) && disabled)) return 0;
 
         var options = context.GetAuditOptions();
         var logger = context.GetService<ILoggerFactory>().CreateLogger(GetType());
@@ -203,11 +193,14 @@ internal sealed class AuditInterceptor<TUserId> : SaveChangesInterceptor, IDispo
                 EventTime = DateTimeOffset.Now,
                 UserId = userProvider.Id,
                 UserName = userProvider.Name,
+                IPAddress = userProvider.IPAddress,
+                ClientName = userProvider.ClientName,
                 Details = i.Properties.ConvertAll(j => new AuditFieldChangeLog
                 {
-                    FieldName = i.EntityType + '.' + j.PropertyName,
+                    FieldName = i.EntityType + '.' + j.Name,
                     OriginalValue = GetStringValue(j.OriginalValue),
                     NewValue = GetStringValue(j.NewValue),
+                    ValueType = j.ValueType,
                 }),
             })
             .ToList();
@@ -232,7 +225,7 @@ internal sealed class AuditInterceptor<TUserId> : SaveChangesInterceptor, IDispo
         return entityChangedCount + fieldChangedCount;
     }
 
-    private static bool TryGetAuditEntry(EntityEntry entityEntry, [NotNullWhen(true)] out AuditEntry? auditEntry)
+    private static bool TryGetAuditEntry(EntityEntry entityEntry, [NotNullWhen(true)] out AuditEntityEntry? auditEntry)
     {
         var entityInclude = entityEntry.Metadata.GetAuditInclude();
         if (!entityInclude)
@@ -241,7 +234,7 @@ internal sealed class AuditInterceptor<TUserId> : SaveChangesInterceptor, IDispo
             return false;
         }
 
-        auditEntry = new AuditEntry(entityEntry);
+        auditEntry = new AuditEntityEntry(entityEntry);
 
         foreach (var propertyEntry in entityEntry.Properties)
         {
@@ -255,7 +248,7 @@ internal sealed class AuditInterceptor<TUserId> : SaveChangesInterceptor, IDispo
 
                 auditEntry.Properties.Add(new AuditPropertyEntry
                 {
-                    PropertyName = propertyEntry.Metadata.Name,
+                    Name = propertyEntry.Metadata.Name,
                     OriginalValue = entityEntry.State == EntityState.Added ? null : propertyEntry.OriginalValue,
                     NewValue = propertyEntry.CurrentValue
                 });

@@ -66,11 +66,6 @@ public class AuditOptions
 public class AuditEntityComments
 {
     /// <summary>
-    /// Comment to Id property.
-    /// </summary>
-    public string Id { get; set; } = "Unique identifier, primary key.";
-
-    /// <summary>
     /// Comment to CreatedAt property.
     /// </summary>
     public string CreatedAt { get; set; } = "The date and time when created this entity.";

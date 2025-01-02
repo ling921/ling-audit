@@ -1,24 +1,27 @@
-﻿using Microsoft.EntityFrameworkCore.ChangeTracking;
-
-namespace Ling.Audit.EntityFrameworkCore.Internal.Models;
+﻿namespace Ling.Audit.EntityFrameworkCore.Internal.Models;
 
 /// <summary>
-/// Represents the property change information of the <see cref="EntityEntry"/>.
+/// Represents temporary tracking information for a property change during auditing.
 /// </summary>
 internal sealed class AuditPropertyEntry
 {
     /// <summary>
-    /// The property name.
+    /// Gets or sets the property name.
     /// </summary>
-    public string PropertyName { get; set; } = default!;
+    public string Name { get; set; } = default!;
 
     /// <summary>
-    /// The original value of the property.
+    /// Gets or sets the original value before change.
     /// </summary>
     public object? OriginalValue { get; set; }
 
     /// <summary>
-    /// The new value of the property.
+    /// Gets or sets the new value after change.
     /// </summary>
     public object? NewValue { get; set; }
+
+    /// <summary>
+    /// Gets or sets the type of the property value.
+    /// </summary>
+    public string ValueType { get; set; } = default!;
 }

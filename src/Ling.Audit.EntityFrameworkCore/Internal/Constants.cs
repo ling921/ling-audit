@@ -2,20 +2,20 @@
 
 internal static class Constants
 {
-    internal const string IncludeAnnotationName = "Ling:Audit:Include";
+    internal const string AuditableAnnotationName = "Ling:Audit:Auditable";
     internal const string MetadataAnnotationName = "Ling:Audit:Metadata";
 
     internal const string Id = "Id";
-    internal const string CreatedAt = "CreatedAt";
-    internal const string CreatedBy = "CreatedBy";
-    internal const string ModifiedAt = "ModifiedAt";
-    internal const string ModifiedBy = "ModifiedBy";
-    internal const string IsDeleted = "IsDeleted";
-    internal const string DeletedAt = "DeletedAt";
-    internal const string DeletedBy = "DeletedBy";
+    internal const string CreatedAt = nameof(IHasCreationTime.CreatedAt);
+    internal const string CreatedBy = nameof(IHasCreator<int>.CreatedBy);
+    internal const string ModifiedAt = nameof(IHasModificationTime.LastModifiedAt);
+    internal const string ModifiedBy = nameof(IHasModifier<int>.LastModifiedBy);
+    internal const string IsDeleted = nameof(ISoftDelete.IsDeleted);
+    internal const string DeletedAt = nameof(IHasDeletionTime.DeletedAt);
+    internal const string DeletedBy = nameof(IHasDeleter<int>.DeletedBy);
 
-    internal static readonly IReadOnlyCollection<string> PropertyNames = new[]
-    {
+    internal static readonly IReadOnlyCollection<string> PropertyNames =
+    [
         Id,
         CreatedAt,
         CreatedBy,
@@ -24,5 +24,5 @@ internal static class Constants
         IsDeleted,
         DeletedAt,
         DeletedBy,
-    };
+    ];
 }

@@ -8,25 +8,19 @@ namespace Ling.Audit.EntityFrameworkCore;
 public static class AuditDefaults
 {
     /// <summary>
-    /// The key of the <see cref="AppContext"/> for disable auditing. Setting this value to <see langword="true"/> will disable.
+    /// The switch to control whether auditing is disabled.
+    /// <para>
+    /// To disable auditing:
+    /// <code>
+    /// AppContext.SetSwitch("Ling.Audit.EntityFrameworkCore.DisableAuditing", true);
+    /// </code>
+    /// </para>
     /// </summary>
-    public const string DisabledSwitchKey = "Ling.DisableAudit";
+    public const string DisableAuditingSwitch = "Ling.Audit.EntityFrameworkCore.DisableAuditing";
 
     /// <summary>
     /// The key for the <see cref="AuditOptions"/> configuration.
     /// It will be used to get the <see cref="AuditOptions"/> from <see cref="IConfiguration"/>'s section.
     /// </summary>
-    public const string ConfigurationKey = "Audit";
-
-    /// <summary>
-    /// Table name that records entity change audit logs.
-    /// <para>DO NOT change this value if migrations are added.</para>
-    /// </summary>
-    public static string EntityChangeAuditLogTableName { get; set; } = "AuditEntityLog";
-
-    /// <summary>
-    /// The table name that records entity's fields change audit logs.
-    /// <para>DO NOT change this value if migrations are added.</para>
-    /// </summary>
-    public static string EntityFieldChangeAuditLogTableName { get; set; } = "AuditFieldLog";
+    public const string ConfigurationSection = "Audit";
 }

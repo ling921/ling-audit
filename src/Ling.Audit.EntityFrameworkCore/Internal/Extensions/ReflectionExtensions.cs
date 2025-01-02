@@ -1,32 +1,39 @@
-﻿namespace Ling.Audit.EntityFrameworkCore.Extensions;
+﻿using System.Text;
 
+namespace Ling.Audit.EntityFrameworkCore.Internal.Extensions;
+
+/// <summary>
+/// Extension methods for reflection operations.
+/// </summary>
 internal static class ReflectionExtensions
 {
+    /// <summary>
+    /// Gets a friendly name for the type, handling generic type definitions.
+    /// </summary>
+    /// <param name="type">The type to get the friendly name for.</param>
+    /// <returns>A readable string representation of the type name.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="type"/> is null.</exception>
     internal static string GetFriendlyName(this Type type)
     {
-        var friendlyName = type.Name;
-        if (type.IsGenericType)
+        ArgumentNullException.ThrowIfNull(type);
+
+        if (!type.IsGenericType)
         {
-            var iBacktick = friendlyName.IndexOf('`');
-            if (iBacktick > 0)
-            {
-                friendlyName = friendlyName.Remove(iBacktick);
-            }
-            friendlyName += "<";
-            var typeParameters = type.GetGenericArguments();
-            for (var i = 0; i < typeParameters.Length; ++i)
-            {
-                var typeParamName = typeParameters[i].GetFriendlyName();
-                friendlyName += i == 0 ? typeParamName : "," + typeParamName;
-            }
-            friendlyName += ">";
+            return type.Name;
         }
 
-        return friendlyName;
-    }
+        var builder = new StringBuilder();
+        var nameParts = type.Name.Split('`');
+        builder.Append(nameParts[0]);
 
-    internal static bool IsSameTypeIgnoreNullableTo(this Type? a, Type? b)
-        => a is not null
-        && b is not null
-        && (Nullable.GetUnderlyingType(a) ?? a) == (Nullable.GetUnderlyingType(b) ?? b);
+        var genericArgs = type.GetGenericArguments();
+        if (genericArgs.Length > 0)
+        {
+            builder.Append('<');
+            builder.AppendJoin(",", genericArgs.Select(t => t.GetFriendlyName()));
+            builder.Append('>');
+        }
+
+        return builder.ToString();
+    }
 }
