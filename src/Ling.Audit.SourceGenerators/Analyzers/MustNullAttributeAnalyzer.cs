@@ -29,7 +29,8 @@ internal class MustNullAttributeAnalyzer : DiagnosticAnalyzer
             SyntaxKind.VariableDeclaration,
             SyntaxKind.MethodDeclaration,
             SyntaxKind.Parameter,
-            SyntaxKind.DelegateDeclaration);
+            SyntaxKind.DelegateDeclaration,
+            SyntaxKind.InvocationExpression);
     }
 
     private static void AnalyzeNode(SyntaxNodeAnalysisContext context)
@@ -62,6 +63,10 @@ internal class MustNullAttributeAnalyzer : DiagnosticAnalyzer
 
             case DelegateDeclarationSyntax delegateDeclaration:
                 AnalyzeDelegateDeclaration(context, delegateDeclaration);
+                break;
+
+            case InvocationExpressionSyntax invocation:
+                AnalyzeInvocation(context, invocation);
                 break;
         }
     }
@@ -119,6 +124,14 @@ internal class MustNullAttributeAnalyzer : DiagnosticAnalyzer
         {
             CheckGenericTypeArguments(context, genericReturnType);
         }
+
+        if (methodDeclaration.TypeParameterList != null)
+        {
+            foreach (var typeParam in methodDeclaration.TypeParameterList.Parameters)
+            {
+                AnalyzeTypeParameterDeclaration(context, typeParam);
+            }
+        }
     }
 
     private static void AnalyzeParameter(SyntaxNodeAnalysisContext context, ParameterSyntax parameter)
@@ -137,41 +150,98 @@ internal class MustNullAttributeAnalyzer : DiagnosticAnalyzer
         }
     }
 
+    private static void AnalyzeInvocation(SyntaxNodeAnalysisContext context, InvocationExpressionSyntax invocation)
+    {
+        ExpressionSyntax? expression = invocation.Expression;
+        while (expression is not null)
+        {
+            if (expression is GenericNameSyntax genericName)
+            {
+                CheckGenericTypeArguments(context, genericName);
+                expression = null;
+            }
+            else if (expression is MemberAccessExpressionSyntax { Name: GenericNameSyntax genericName2 })
+            {
+                CheckGenericTypeArguments(context, genericName2);
+                expression = null;
+            }
+            else if (expression is InvocationExpressionSyntax invocationExpression)
+            {
+                expression = invocationExpression.Expression;
+            }
+            else
+            {
+                expression = null;
+            }
+        }
+    }
+
     private static void CheckGenericTypeArguments(SyntaxNodeAnalysisContext context, GenericNameSyntax genericName)
     {
-        if (context.SemanticModel.GetSymbolInfo(genericName).Symbol is not INamedTypeSymbol typeSymbol)
+        var symbolInfo = context.SemanticModel.GetSymbolInfo(genericName);
+        if (symbolInfo is { Symbol: INamedTypeSymbol typeSymbol })
         {
-            return;
-        }
+            var mustNullAttribute = GetMustNullAttributeSymbol(context.Compilation);
 
-        var mustNullAttribute = GetMustNullAttributeSymbol(context.Compilation);
-
-        for (var i = 0; i < typeSymbol.TypeArguments.Length; i++)
-        {
-            var argument = typeSymbol.TypeArguments[i];
-            var argumentSyntax = genericName.TypeArgumentList.Arguments[i];
-
-            // Check if current type parameter has MustNullAttribute or its base type has
-            if (HasAttributeSymbol(typeSymbol.TypeParameters[i], mustNullAttribute) ||
-                (argument is INamedTypeSymbol && HasMustNullDefinitionInBaseTypes(typeSymbol, i, mustNullAttribute)))
+            for (var i = 0; i < typeSymbol.TypeArguments.Length; i++)
             {
-                // Check argument is nullable
-                if (argument is not ITypeParameterSymbol && !argument.CanAssignNull())
+                var argument = typeSymbol.TypeArguments[i];
+                var argumentSyntax = genericName.TypeArgumentList.Arguments[i];
+
+                // Check if current type parameter has MustNullAttribute or its base type has
+                if (HasAttributeSymbol(typeSymbol.TypeParameters[i], mustNullAttribute) ||
+                    (argument is INamedTypeSymbol && HasMustNullDefinitionInBaseTypes(typeSymbol, i, mustNullAttribute)))
                 {
-                    var diagnostic = Diagnostic.Create(
-                        DiagnosticDescriptors.TypeParameterMustBeNullable,
-                        argumentSyntax.GetLocation(),
-                        argumentSyntax.ToFullString());
-                    context.ReportDiagnostic(diagnostic);
+                    // Check argument is nullable
+                    if (argument is not ITypeParameterSymbol && !argument.CanAssignNull())
+                    {
+                        var diagnostic = Diagnostic.Create(
+                            DiagnosticDescriptors.TypeParameterMustBeNullable,
+                            argumentSyntax.GetLocation(),
+                            argumentSyntax.ToFullString());
+                        context.ReportDiagnostic(diagnostic);
+                    }
+                }
+
+                // If type argument is a generic type, check itself
+                if (argument is INamedTypeSymbol namedTypeArgument &&
+                    namedTypeArgument.IsGenericType &&
+                    argumentSyntax is GenericNameSyntax nestedGenericName)
+                {
+                    CheckGenericTypeArguments(context, nestedGenericName);
                 }
             }
+        }
+        else if (symbolInfo is { Symbol: IMethodSymbol methodSymbol })
+        {
+            var mustNullAttribute = GetMustNullAttributeSymbol(context.Compilation);
 
-            // If type argument is a generic type, check itself
-            if (argument is INamedTypeSymbol namedTypeArgument &&
-                namedTypeArgument.IsGenericType &&
-                argumentSyntax is GenericNameSyntax nestedGenericName)
+            for (var i = 0; i < methodSymbol.TypeArguments.Length; i++)
             {
-                CheckGenericTypeArguments(context, nestedGenericName);
+                var argument = methodSymbol.TypeArguments[i];
+                var argumentSyntax = genericName.TypeArgumentList.Arguments[i];
+
+                // Check if current type parameter has MustNullAttribute or its base type has
+                if (HasAttributeSymbol(methodSymbol.TypeParameters[i], mustNullAttribute))
+                {
+                    // Check argument is nullable
+                    if (argument is not ITypeParameterSymbol && !argument.CanAssignNull())
+                    {
+                        var diagnostic = Diagnostic.Create(
+                            DiagnosticDescriptors.TypeParameterMustBeNullable,
+                            argumentSyntax.GetLocation(),
+                            argumentSyntax.ToFullString());
+                        context.ReportDiagnostic(diagnostic);
+                    }
+                }
+
+                // If type argument is a generic type, check itself
+                if (argument is INamedTypeSymbol namedTypeArgument &&
+                    namedTypeArgument.IsGenericType &&
+                    argumentSyntax is GenericNameSyntax nestedGenericName)
+                {
+                    CheckGenericTypeArguments(context, nestedGenericName);
+                }
             }
         }
     }

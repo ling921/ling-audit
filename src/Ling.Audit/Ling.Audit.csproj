@@ -43,6 +43,12 @@
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="all" />
   </ItemGroup>
 
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>Ling.Audit.EntityFrameworkCore</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
   <!-- Source Generator -->
   <ItemGroup>
     <ProjectReference Include="..\Ling.Audit.SourceGenerators\Ling.Audit.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
