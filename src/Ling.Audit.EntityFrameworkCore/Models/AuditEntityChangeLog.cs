@@ -6,7 +6,7 @@ namespace Ling.Audit.EntityFrameworkCore;
 /// Represents the audit log for entities.
 /// </summary>
 /// <typeparam name="TUserId">The type of the user ID.</typeparam>
-public class AuditEntityChangeLog<TUserId>
+public class AuditEntityChangeLog<[MustNull] TUserId>
 {
     /// <summary>
     /// Gets or sets the primary key.

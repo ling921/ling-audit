@@ -3,7 +3,7 @@
 /// <summary>
 /// Interface for audit user information.
 /// </summary>
-public interface IAuditContextProvider<TUserId>
+public interface IAuditContextProvider<[MustNull] TUserId>
 {
     /// <summary>
     /// Gets the identity of user.

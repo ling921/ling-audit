@@ -23,5 +23,5 @@ internal sealed class AuditPropertyEntry
     /// <summary>
     /// Gets or sets the type of the property value.
     /// </summary>
-    public string ValueType { get; set; } = default!;
+    public Type ValueType { get; set; } = default!;
 }

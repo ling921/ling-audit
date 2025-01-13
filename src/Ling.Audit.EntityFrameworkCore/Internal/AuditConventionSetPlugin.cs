@@ -1,5 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Conventions;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions.Infrastructure;
+using System.Reflection;
 
 namespace Ling.Audit.EntityFrameworkCore.Internal;
 
@@ -25,5 +27,59 @@ internal sealed class AuditConventionSetPlugin : IConventionSetPlugin
         conventionSet.EntityTypeAddedConventions.Add(new AuditIncludeAttributeConvention(_dependencies));
         conventionSet.PropertyAddedConventions.Add(new AuditIgnoreAttributeConvention(_dependencies));
         return conventionSet;
+    }
+
+    /// <summary>
+    /// Convention to process <see cref="AuditIncludeAttribute"/> on entity types.
+    /// </summary>
+    private sealed class AuditIncludeAttributeConvention :
+#if NET8_0_OR_GREATER
+        TypeAttributeConventionBase<AuditIncludeAttribute>
+#else
+    EntityTypeAttributeConventionBase<AuditIncludeAttribute>
+#endif
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AuditIncludeAttributeConvention"/> class.
+        /// </summary>
+        /// <param name="dependencies">The dependencies required for this convention.</param>
+        public AuditIncludeAttributeConvention(ProviderConventionSetBuilderDependencies dependencies)
+            : base(dependencies)
+        {
+        }
+
+        /// <inheritdoc/>
+        protected override void ProcessEntityTypeAdded(
+            IConventionEntityTypeBuilder entityTypeBuilder,
+            AuditIncludeAttribute attribute,
+            IConventionContext<IConventionEntityTypeBuilder> context)
+        {
+            entityTypeBuilder.Metadata.SetAnnotation(Constants.AuditableAnnotationName, true);
+        }
+    }
+
+    /// <summary>
+    /// Convention to process <see cref="AuditIgnoreAttribute"/> on properties and fields.
+    /// </summary>
+    private sealed class AuditIgnoreAttributeConvention : PropertyAttributeConventionBase<AuditIgnoreAttribute>
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AuditIgnoreAttributeConvention"/> class.
+        /// </summary>
+        /// <param name="dependencies">The dependencies required for this convention.</param>
+        public AuditIgnoreAttributeConvention(ProviderConventionSetBuilderDependencies dependencies)
+            : base(dependencies)
+        {
+        }
+
+        /// <inheritdoc/>
+        protected override void ProcessPropertyAdded(
+            IConventionPropertyBuilder propertyBuilder,
+            AuditIgnoreAttribute attribute,
+            MemberInfo clrMember,
+            IConventionContext context)
+        {
+            propertyBuilder.Metadata.SetAnnotation(Constants.AuditableAnnotationName, false);
+        }
     }
 }

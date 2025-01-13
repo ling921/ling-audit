@@ -1,27 +1,33 @@
-﻿namespace Ling.Audit.EntityFrameworkCore.Internal;
+﻿using Microsoft.Extensions.Configuration;
+
+namespace Ling.Audit.EntityFrameworkCore.Internal;
 
 internal static class Constants
 {
-    internal const string AuditableAnnotationName = "Ling:Audit:Auditable";
-    internal const string MetadataAnnotationName = "Ling:Audit:Metadata";
+    /// <summary>
+    /// The key for the <see cref="AuditOptions"/> configuration.
+    /// It will be used to get the <see cref="AuditOptions"/> from <see cref="IConfiguration"/>'s section.
+    /// </summary>
+    public const string ConfigurationSection = "Audit";
 
-    internal const string Id = "Id";
-    internal const string CreatedAt = nameof(IHasCreationTime.CreatedAt);
-    internal const string CreatedBy = nameof(IHasCreator<int>.CreatedBy);
-    internal const string ModifiedAt = nameof(IHasModificationTime.LastModifiedAt);
-    internal const string ModifiedBy = nameof(IHasModifier<int>.LastModifiedBy);
-    internal const string IsDeleted = nameof(ISoftDelete.IsDeleted);
-    internal const string DeletedAt = nameof(IHasDeletionTime.DeletedAt);
-    internal const string DeletedBy = nameof(IHasDeleter<int>.DeletedBy);
+    public const string AuditableAnnotationName = "Ling:Audit:Auditable";
+    public const string MetadataAnnotationName = "Ling:Audit:Metadata";
 
-    internal static readonly IReadOnlyCollection<string> PropertyNames =
+    public const string Id = "Id";
+    public const string CreatedAt = nameof(IHasCreationTime.CreatedAt);
+    public const string CreatedBy = nameof(IHasCreator<int>.CreatedBy);
+    public const string ModifiedAt = nameof(IHasModificationTime.LastModifiedAt);
+    public const string ModifiedBy = nameof(IHasModifier<int>.LastModifiedBy);
+    public const string IsDeleted = nameof(ISoftDelete.IsDeleted);
+    public const string DeletedAt = nameof(IHasDeletionTime.DeletedAt);
+    public const string DeletedBy = nameof(IHasDeleter<int>.DeletedBy);
+
+    public static readonly IReadOnlyCollection<string> PropertyNames =
     [
-        Id,
         CreatedAt,
         CreatedBy,
         ModifiedAt,
         ModifiedBy,
-        IsDeleted,
         DeletedAt,
         DeletedBy,
     ];

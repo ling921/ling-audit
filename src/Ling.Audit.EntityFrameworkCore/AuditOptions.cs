@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+﻿using System.Text.Json;
 
 namespace Ling.Audit.EntityFrameworkCore;
 
@@ -7,8 +7,6 @@ namespace Ling.Audit.EntityFrameworkCore;
 /// </summary>
 public class AuditOptions
 {
-    internal Type? UserIdType { get; set; }
-
     /// <summary>
     /// Whether to allow anonymous creation of audit entities, default to <see langword="false"/>.
     /// <para>
@@ -40,16 +38,6 @@ public class AuditOptions
     public bool AllowAnonymousDelete { get; set; }
 
     /// <summary>
-    /// Claim type of user identity.
-    /// </summary>
-    public string UserIdClaimType { get; set; } = ClaimTypes.NameIdentifier;
-
-    /// <summary>
-    /// Claim type of user name.
-    /// </summary>
-    public string UserNameClaimType { get; set; } = ClaimTypes.Name;
-
-    /// <summary>
     /// Comments.
     /// </summary>
     public AuditEntityComments Comments { get; set; } = new();
@@ -58,6 +46,11 @@ public class AuditOptions
     /// Whether to audit entities that has no field changes, default to <see langword="false"/>.
     /// </summary>
     public bool AuditNoFieldChangeEntity { get; set; }
+
+    /// <summary>
+    /// Gets or sets <see cref="JsonSerializerOptions"/> for default <see cref="IPropertySerializer"/>.
+    /// </summary>
+    public JsonSerializerOptions? PropertySerializerOptions { get; set; }
 }
 
 /// <summary>

@@ -12,7 +12,7 @@ namespace Ling.Audit.AspNetCore;
 /// <summary>
 /// Default implementation of interface <see cref="IAuditContextProvider{T}"/>.
 /// </summary>
-internal sealed class HttpAuditContextProvider : IAuditContextProvider<string?>
+internal sealed class HttpAuditContextProvider : IAuditContextProvider<string>
 {
     private readonly Lazy<AuditContext> _lazyContext;
 

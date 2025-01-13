@@ -17,10 +17,4 @@ public static class AuditDefaults
     /// </para>
     /// </summary>
     public const string DisableAuditingSwitch = "Ling.Audit.EntityFrameworkCore.DisableAuditing";
-
-    /// <summary>
-    /// The key for the <see cref="AuditOptions"/> configuration.
-    /// It will be used to get the <see cref="AuditOptions"/> from <see cref="IConfiguration"/>'s section.
-    /// </summary>
-    public const string ConfigurationSection = "Audit";
 }

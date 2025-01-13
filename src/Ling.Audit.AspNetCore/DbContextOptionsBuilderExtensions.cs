@@ -20,12 +20,7 @@ public static class DbContextOptionsBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        builder.AddAuditOptions(setupAction);
-
-        builder.AddAuditUserProvider<HttpAuditContextProvider, string?>();
-        builder.AddAuditConvention();
-        builder.AddAuditInterceptor<string?>();
-        builder.AddModelCustomizer<string?>();
+        builder.UseAudit<HttpAuditContextProvider, string>(setupAction);
 
         return builder;
     }

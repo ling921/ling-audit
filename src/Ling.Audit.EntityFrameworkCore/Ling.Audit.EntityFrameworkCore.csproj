@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Ling.Audit" Version="2.0.0" />
+    <PackageReference Include="Ling.Audit" Version="2.0.1" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
@@ -28,6 +28,12 @@
   <ItemGroup Condition=" '$(TargetFramework)' == 'net9.0' ">
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.*" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>Ling.Audit.AspNetCore</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
 
 </Project>

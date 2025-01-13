@@ -1,5 +1,4 @@
-﻿using Ling.Audit.EntityFrameworkCore.Internal;
-using Ling.Audit.EntityFrameworkCore.Internal.Extensions;
+﻿using Ling.Audit.EntityFrameworkCore.Internal.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -17,72 +16,25 @@ public static class DbContextOptionsBuilderExtensions
     /// </summary>
     /// <param name="builder">The <see cref="DbContextOptionsBuilder"/>.</param>
     /// <param name="setupAction">The action used to configure the <see cref="AuditOptions"/>.</param>
-    public static DbContextOptionsBuilder UseAudit<TUserProvider, TUserId>(
+    public static DbContextOptionsBuilder UseAudit<TUserProvider, [MustNull] TUserId>(
         this DbContextOptionsBuilder builder,
         Action<AuditOptions>? setupAction = null)
         where TUserProvider : class, IAuditContextProvider<TUserId>
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        builder.AddAuditOptions(setupAction, o => o.UserIdType = typeof(TUserId));
-
-        builder.AddAuditUserProvider<TUserProvider, TUserId>();
-        builder.AddAuditConvention();
-        builder.AddAuditInterceptor<TUserId>();
-        builder.AddModelCustomizer<TUserId>();
-
-        return builder;
-    }
-
-    internal static DbContextOptionsBuilder AddAuditOptions(
-        this DbContextOptionsBuilder builder,
-        Action<AuditOptions>? setupAction,
-        Action<AuditOptions>? additional = null)
-    {
-        var extension = builder.Options.FindExtension<AuditOptionsExtension>();
-        if (extension is null)
-        {
-            var combine = (setupAction ?? delegate { }) + (additional ?? delegate { });
-            extension = new AuditOptionsExtension(combine);
-        }
+        var extension = builder.Options.FindExtension<AuditOptionsExtension<TUserProvider, TUserId>>()
+            ?? new AuditOptionsExtension<TUserProvider, TUserId>(setupAction);
 
         ((IDbContextOptionsBuilderInfrastructure)builder).AddOrUpdateExtension(extension);
 
         return builder;
     }
 
-    internal static DbContextOptionsBuilder AddAuditUserProvider<TUserProvider, TUserId>(this DbContextOptionsBuilder builder)
-            where TUserProvider : class, IAuditContextProvider<TUserId>
+    public static DbContextOptionsBuilder UseSerializer<TSerializer>(this DbContextOptionsBuilder builder)
+        where TSerializer : class, IPropertySerializer
     {
-        var extension = builder.Options.FindExtension<UserProviderExtension<TUserProvider, TUserId>>()
-            ?? new UserProviderExtension<TUserProvider, TUserId>();
-
-        ((IDbContextOptionsBuilderInfrastructure)builder).AddOrUpdateExtension(extension);
-
-        return builder;
-    }
-
-    internal static DbContextOptionsBuilder AddAuditConvention(this DbContextOptionsBuilder builder)
-    {
-        var extension = builder.Options.FindExtension<AuditConventionExtension>() ?? new AuditConventionExtension();
-
-        ((IDbContextOptionsBuilderInfrastructure)builder).AddOrUpdateExtension(extension);
-
-        return builder;
-    }
-
-    internal static DbContextOptionsBuilder AddAuditInterceptor<TUserId>(this DbContextOptionsBuilder builder)
-    {
-        builder.AddInterceptors(new AuditInterceptor<TUserId>());
-        builder.ReplaceService<IModelCustomizer, AuditModelCustomizer<TUserId>>();
-
-        return builder;
-    }
-
-    internal static DbContextOptionsBuilder AddModelCustomizer<TUserId>(this DbContextOptionsBuilder builder)
-    {
-        builder.AddInterceptors(new AuditInterceptor<TUserId>());
-        builder.ReplaceService<IModelCustomizer, AuditModelCustomizer<TUserId>>();
+        builder.ReplaceService<IPropertySerializer, TSerializer>();
 
         return builder;
     }

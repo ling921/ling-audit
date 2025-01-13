@@ -5,9 +5,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Logging;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-using System.Text.Json;
 
 namespace Ling.Audit.EntityFrameworkCore.Internal;
 
@@ -75,7 +73,7 @@ internal sealed class AuditInterceptor<TUserId> : SaveChangesInterceptor, IDispo
             var entityType = entityEntry.Metadata.ClrType;
             var metadata = entityEntry.Metadata.GetAuditMetadata();
             var eventType = AuditEventType.None;
-            var userId = isUserIdDefaultValue ? null : userProvider.Id.ConvertToTargetType(metadata.UserIdType);
+            var userId = userProvider.Id;
 
             switch (entityEntry.State)
             {
@@ -182,6 +180,8 @@ internal sealed class AuditInterceptor<TUserId> : SaveChangesInterceptor, IDispo
         }
 
         var userProvider = context.GetService<IAuditContextProvider<TUserId>>();
+        var serializer = context.GetService<IPropertySerializer>();
+
         var logs = _entries
             .Select(i => new AuditEntityChangeLog<TUserId>
             {
@@ -198,9 +198,9 @@ internal sealed class AuditInterceptor<TUserId> : SaveChangesInterceptor, IDispo
                 Details = i.Properties.ConvertAll(j => new AuditFieldChangeLog
                 {
                     FieldName = i.EntityType + '.' + j.Name,
-                    OriginalValue = GetStringValue(j.OriginalValue),
-                    NewValue = GetStringValue(j.NewValue),
-                    ValueType = j.ValueType,
+                    OriginalValue = serializer.Serialize(j.OriginalValue, j.ValueType),
+                    NewValue = serializer.Serialize(j.NewValue, j.ValueType),
+                    ValueType = j.ValueType.Name,
                 }),
             })
             .ToList();
@@ -249,8 +249,9 @@ internal sealed class AuditInterceptor<TUserId> : SaveChangesInterceptor, IDispo
                 auditEntry.Properties.Add(new AuditPropertyEntry
                 {
                     Name = propertyEntry.Metadata.Name,
-                    OriginalValue = entityEntry.State == EntityState.Added ? null : propertyEntry.OriginalValue,
-                    NewValue = propertyEntry.CurrentValue
+                    ValueType = propertyEntry.Metadata.ClrType,
+                    OriginalValue = entityEntry.State is EntityState.Added ? null : propertyEntry.OriginalValue,
+                    NewValue = entityEntry.State is EntityState.Deleted ? null : propertyEntry.CurrentValue
                 });
             }
         }
@@ -270,32 +271,6 @@ internal sealed class AuditInterceptor<TUserId> : SaveChangesInterceptor, IDispo
             }
         }
         return AuditEventType.Modify;
-    }
-
-    private static string? GetStringValue(object? value)
-    {
-        if (value == null) return null;
-
-        try
-        {
-            if (value is DateTime dt)
-            {
-                return dt.ToString("yyyy-MM-dd HH:mm:ss");
-            }
-            else if (value is DateTimeOffset dto)
-            {
-                return dto.ToString("yyyy-MM-dd HH:mm:ss zzz");
-            }
-
-            var converter = TypeDescriptor.GetConverter(value.GetType());
-            if (converter.CanConvertTo(typeof(string)))
-            {
-                return converter.ConvertToString(value);
-            }
-        }
-        catch { }
-
-        return JsonSerializer.Serialize(value);
     }
 
     /// <inheritdoc />

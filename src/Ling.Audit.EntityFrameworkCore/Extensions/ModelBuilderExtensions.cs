@@ -152,14 +152,13 @@ public static class ModelBuilderExtensions
     /// <param name="options">Audit options to configure the behavior of audited entities.</param>
     /// <param name="logger">Logger to log the configuration process.</param>
     /// <returns>The identity type of user for current <see cref="DbContext"/>.</returns>
-    internal static Type? ConfigureAuditableEntities(this ModelBuilder builder, AuditOptions options, ILogger logger)
+    internal static void ConfigureAuditableEntities<TUserId>(this ModelBuilder builder, AuditOptions options, ILogger logger)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(options);
 
-        Type? userIdType = options.UserIdType;
-        logger.LogInformation("Starting to configure auditable entities. Initial user ID type: {UserIdType}",
-            userIdType?.GetFriendlyName() ?? "null");
+        var userIdType = typeof(TUserId);
+        logger.LogInformation("Starting to configure auditable entities. Initial user ID type: {UserIdType}", userIdType.GetFriendlyName());
 
         foreach (var entityType in builder.Model.GetEntityTypes())
         {
@@ -179,7 +178,7 @@ public static class ModelBuilderExtensions
 
             if (entityType.HasProperty(Constants.CreatedBy, out var createdByType))
             {
-                ValidateAndUpdateUserIdType(entityClrType, Constants.CreatedBy, createdByType, ref userIdType);
+                ValidateAndUpdateUserIdType(entityClrType, Constants.CreatedBy, createdByType, userIdType);
                 ConfigureProperty(builder, entityClrType, createdByType, Constants.CreatedBy, 992, options.Comments.CreatedBy);
                 metadata.HasCreatedBy = true;
                 metadata.UserIdType = createdByType;
@@ -195,7 +194,7 @@ public static class ModelBuilderExtensions
 
             if (entityType.HasProperty(Constants.ModifiedBy, out var modifiedByType))
             {
-                ValidateAndUpdateUserIdType(entityClrType, Constants.ModifiedBy, modifiedByType, ref userIdType);
+                ValidateAndUpdateUserIdType(entityClrType, Constants.ModifiedBy, modifiedByType, userIdType);
                 ConfigureProperty(builder, entityClrType, modifiedByType, Constants.ModifiedBy, 995, options.Comments.ModifiedBy);
                 metadata.HasModifiedBy = true;
                 metadata.UserIdType = modifiedByType;
@@ -218,7 +217,7 @@ public static class ModelBuilderExtensions
 
             if (entityType.HasProperty(Constants.DeletedBy, out var deletedByType))
             {
-                ValidateAndUpdateUserIdType(entityClrType, Constants.DeletedBy, deletedByType, ref userIdType);
+                ValidateAndUpdateUserIdType(entityClrType, Constants.DeletedBy, deletedByType, userIdType);
                 ConfigureProperty(builder, entityClrType, deletedByType, Constants.DeletedBy, 999, options.Comments.DeletedBy);
                 metadata.HasDeletedBy = true;
                 metadata.UserIdType = deletedByType;
@@ -247,10 +246,7 @@ public static class ModelBuilderExtensions
             }
         }
 
-        logger.LogInformation("Completed configuring auditable entities. Final user ID type: {UserIdType}",
-            userIdType?.GetFriendlyName() ?? "null");
-
-        return userIdType;
+        logger.LogInformation("Completed configuring auditable entities.");
     }
 
     /// <summary>
@@ -381,13 +377,9 @@ public static class ModelBuilderExtensions
     /// <param name="propertyType">The type of the property to validate.</param>
     /// <param name="userIdType">The user ID type to update.</param>
     /// <exception cref="InvalidOperationException">Thrown when the user ID type does not match the expected type.</exception>
-    private static void ValidateAndUpdateUserIdType(Type entityClrType, string propertyName, Type propertyType, ref Type? userIdType)
+    private static void ValidateAndUpdateUserIdType(Type entityClrType, string propertyName, Type propertyType, Type userIdType)
     {
-        if (userIdType is null)
-        {
-            userIdType = propertyType;
-        }
-        else if (userIdType != propertyType)
+        if (userIdType != propertyType)
         {
             throw new InvalidOperationException(
                 $"User ID type mismatch in entity '{entityClrType.GetFriendlyName()}.{propertyName}'. Expected '{userIdType.GetFriendlyName()}' but found '{propertyType.GetFriendlyName()}'.");
