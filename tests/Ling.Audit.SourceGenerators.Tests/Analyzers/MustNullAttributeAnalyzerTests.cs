@@ -715,5 +715,219 @@ public class MustNullAttributeAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(test, expected);
     }
 
+    [Fact]
+    public async Task GenericMethod_ImplicitCall_NonNullableStruct_ReportsDiagnostic()
+    {
+        const string test = """
+        using Ling.Audit;
+
+        public class Usage
+        {
+            public T Method<[MustNull] T>(T item) => item;
+
+            public void Test()
+            {
+                Method(42);  // int is non-nullable struct
+            }
+        }
+        """;
+
+        var expected = VerifyCS.Diagnostic(DiagnosticDescriptors.ParameterTypeMustBeNullable)
+            .WithLocation(9, 16)
+            .WithArguments("42");
+
+        await VerifyCS.VerifyAnalyzerAsync(test, expected);
+    }
+
+    [Fact]
+    public async Task GenericMethod_ImplicitCall_ReferenceType_NoDiagnostic()
+    {
+        const string test = """
+        using Ling.Audit;
+
+        public class Usage
+        {
+            public T Method<[MustNull] T>(T item) => item;
+
+            public void Test()
+            {
+                Method("test");  // string is reference type, always nullable
+            }
+        }
+        """;
+
+        await VerifyCS.VerifyAnalyzerAsync(test);
+    }
+
+    [Fact]
+    public async Task GenericMethod_ImplicitCall_NullableStruct_NoDiagnostic()
+    {
+        const string test = """
+        using Ling.Audit;
+
+        public class Usage
+        {
+            public T Method<[MustNull] T>(T item) => item;
+
+            public void Test()
+            {
+                int? nullableInt = 42;
+                Method(nullableInt);  // int? is nullable struct
+            }
+        }
+        """;
+
+        await VerifyCS.VerifyAnalyzerAsync(test);
+    }
+
+    [Fact]
+    public async Task GenericMethod_ImplicitCall_Variable_Struct_ReportsDiagnostic()
+    {
+        const string test = """
+        using Ling.Audit;
+
+        public class Usage
+        {
+            public T Method<[MustNull] T>(T item) => item;
+
+            public void Test()
+            {
+                var value = 42;
+                Method(value);  // var inferred as int
+            }
+        }
+        """;
+
+        var expected = VerifyCS.Diagnostic(DiagnosticDescriptors.ParameterTypeMustBeNullable)
+            .WithLocation(10, 16)
+            .WithArguments("value");
+
+        await VerifyCS.VerifyAnalyzerAsync(test, expected);
+    }
+
+    [Fact]
+    public async Task GenericMethod_ImplicitCall_Variable_Class_NoDiagnostic()
+    {
+        const string test = """
+        using Ling.Audit;
+
+        public class Usage
+        {
+            public T Method<[MustNull] T>(T item) => item;
+
+            public void Test()
+            {
+                var text = "test";
+                Method(text);  // var inferred as string (reference type)
+            }
+        }
+        """;
+
+        await VerifyCS.VerifyAnalyzerAsync(test);
+    }
+
+    [Fact]
+    public async Task GenericStaticMethod_ImplicitCall_NonNullableStruct_ReportsDiagnostic()
+    {
+        const string test = """
+        using Ling.Audit;
+
+        public class Usage
+        {
+            public static T StaticMethod<[MustNull] T>(T item) => item;
+
+            public void Test()
+            {
+                StaticMethod(42);  // int is non-nullable struct
+            }
+        }
+        """;
+
+        var expected = VerifyCS.Diagnostic(DiagnosticDescriptors.ParameterTypeMustBeNullable)
+            .WithLocation(9, 22)
+            .WithArguments("42");
+
+        await VerifyCS.VerifyAnalyzerAsync(test, expected);
+    }
+
+    [Fact]
+    public async Task GenericStaticMethod_ImplicitCall_FromStaticContext_ReportsDiagnostic()
+    {
+        const string test = """
+        using Ling.Audit;
+
+        public static class Usage
+        {
+            public static T StaticMethod<[MustNull] T>(T item) => item;
+
+            public static void Test()
+            {
+                StaticMethod(42);  // Called from static context
+            }
+        }
+        """;
+
+        var expected = VerifyCS.Diagnostic(DiagnosticDescriptors.ParameterTypeMustBeNullable)
+            .WithLocation(9, 22)
+            .WithArguments("42");
+
+        await VerifyCS.VerifyAnalyzerAsync(test, expected);
+    }
+
+    [Fact]
+    public async Task GenericStaticMethod_ImplicitCall_FromAnotherClass_ReportsDiagnostic()
+    {
+        const string test = """
+        using Ling.Audit;
+
+        public static class Helper
+        {
+            public static T Create<[MustNull] T>(T item) => item;
+        }
+
+        public class Usage
+        {
+            public void Test()
+            {
+                Helper.Create(42);  // Called from another class
+            }
+        }
+        """;
+
+        var expected = VerifyCS.Diagnostic(DiagnosticDescriptors.ParameterTypeMustBeNullable)
+            .WithLocation(12, 23)
+            .WithArguments("42");
+
+        await VerifyCS.VerifyAnalyzerAsync(test, expected);
+    }
+
+    [Fact]
+    public async Task GenericStaticMethod_ImplicitCall_ChainedMethods_ReportsDiagnostic()
+    {
+        const string test = """
+        using Ling.Audit;
+
+        public static class Helper
+        {
+            public static T Create<[MustNull] T>(T item) => item;
+            public static string ToString<T>(T item) => item?.ToString() ?? "";
+        }
+
+        public class Usage
+        {
+            public void Test()
+            {
+                var result = Helper.Create(42).ToString();  // Method chaining
+            }
+        }
+        """;
+
+        var expected = VerifyCS.Diagnostic(DiagnosticDescriptors.ParameterTypeMustBeNullable)
+            .WithLocation(13, 36)
+            .WithArguments("42");
+
+        await VerifyCS.VerifyAnalyzerAsync(test, expected);
+    }
+
     #endregion Method Calls
 }

@@ -17,6 +17,11 @@ internal static class DiagnosticDescriptors
     public const string TypeParameterMustBeNullableId = "LA001";
 
     /// <summary>
+    /// Diagnostic ID for <see cref="ParameterTypeMustBeNullable"/>: Parameter type must be nullable
+    /// </summary>
+    public const string ParameterTypeMustBeNullableId = "LA002";
+
+    /// <summary>
     /// Diagnostic ID for <see cref="ValueType"/>: Audit operations are not supported on value types
     /// </summary>
     public const string ValueTypeId = "LA101";
@@ -52,6 +57,19 @@ internal static class DiagnosticDescriptors
         DiagnosticSeverity.Error,
         isEnabledByDefault: true,
         description: L(nameof(SR.TypeParameterMustBeNullable_Description)));
+
+    /// <summary>
+    /// Diagnostic rule for parameter type must be nullable.
+    /// <para>Message format: "The parameter type inferred from '{0}' must be nullable."</para>
+    /// </summary>
+    public static readonly DiagnosticDescriptor ParameterTypeMustBeNullable = new(
+        ParameterTypeMustBeNullableId,
+        L(nameof(SR.ParameterTypeMustBeNullable_Title)),
+        L(nameof(SR.ParameterTypeMustBeNullable_Message)),
+        Category,
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: L(nameof(SR.ParameterTypeMustBeNullable_Description)));
 
     /// <summary>
     /// Diagnostic rule for audit operations not supported on value types.

@@ -13,7 +13,8 @@ internal class MustNullAttributeAnalyzer : DiagnosticAnalyzer
 {
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
     [
-        DiagnosticDescriptors.TypeParameterMustBeNullable
+        DiagnosticDescriptors.TypeParameterMustBeNullable,
+        DiagnosticDescriptors.ParameterTypeMustBeNullable
     ];
 
     public override void Initialize(AnalysisContext context)
@@ -160,9 +161,25 @@ internal class MustNullAttributeAnalyzer : DiagnosticAnalyzer
                 CheckGenericTypeArguments(context, genericName);
                 expression = null;
             }
-            else if (expression is MemberAccessExpressionSyntax { Name: GenericNameSyntax genericName2 })
+            else if (expression is IdentifierNameSyntax identifierName)
             {
-                CheckGenericTypeArguments(context, genericName2);
+                if (context.SemanticModel.GetSymbolInfo(identifierName) is { Symbol: IMethodSymbol methodSymbol })
+                {
+                    CheckGenericMethodSymbol(context, methodSymbol, identifierName);
+                }
+                expression = null;
+            }
+            else if (expression is MemberAccessExpressionSyntax memberAccess)
+            {
+                if (memberAccess.Name is GenericNameSyntax genericName2)
+                {
+                    CheckGenericTypeArguments(context, genericName2);
+                }
+                else if (memberAccess.Name is IdentifierNameSyntax identifierName2 &&
+                    context.SemanticModel.GetSymbolInfo(memberAccess) is { Symbol: IMethodSymbol methodSymbol })
+                {
+                    CheckGenericMethodSymbol(context, methodSymbol, identifierName2);
+                }
                 expression = null;
             }
             else if (expression is InvocationExpressionSyntax invocationExpression)
@@ -214,34 +231,43 @@ internal class MustNullAttributeAnalyzer : DiagnosticAnalyzer
         }
         else if (symbolInfo is { Symbol: IMethodSymbol methodSymbol })
         {
-            var mustNullAttribute = GetMustNullAttributeSymbol(context.Compilation);
+            CheckGenericMethodSymbol(context, methodSymbol, genericName);
+        }
+    }
 
-            for (var i = 0; i < methodSymbol.TypeArguments.Length; i++)
+    private static void CheckGenericMethodSymbol(SyntaxNodeAnalysisContext context, IMethodSymbol methodSymbol, SimpleNameSyntax nameSyntax)
+    {
+        var mustNullAttribute = GetMustNullAttributeSymbol(context.Compilation);
+
+        for (var i = 0; i < methodSymbol.TypeArguments.Length; i++)
+        {
+            var argument = methodSymbol.TypeArguments[i];
+            SyntaxNode argumentSyntax = nameSyntax is GenericNameSyntax genericName
+                ? genericName.TypeArgumentList.Arguments[i]
+                : nameSyntax.FirstAncestorOrSelf<InvocationExpressionSyntax>()!.ArgumentList.Arguments[i];
+
+            // Check if current type parameter has MustNullAttribute or its base type has
+            if (HasAttributeSymbol(methodSymbol.TypeParameters[i], mustNullAttribute))
             {
-                var argument = methodSymbol.TypeArguments[i];
-                var argumentSyntax = genericName.TypeArgumentList.Arguments[i];
-
-                // Check if current type parameter has MustNullAttribute or its base type has
-                if (HasAttributeSymbol(methodSymbol.TypeParameters[i], mustNullAttribute))
+                // Check argument is nullable
+                if (argument is not ITypeParameterSymbol && !argument.CanAssignNull())
                 {
-                    // Check argument is nullable
-                    if (argument is not ITypeParameterSymbol && !argument.CanAssignNull())
-                    {
-                        var diagnostic = Diagnostic.Create(
-                            DiagnosticDescriptors.TypeParameterMustBeNullable,
-                            argumentSyntax.GetLocation(),
-                            argumentSyntax.ToFullString());
-                        context.ReportDiagnostic(diagnostic);
-                    }
+                    var diagnostic = Diagnostic.Create(
+                        argumentSyntax is TypeSyntax 
+                            ? DiagnosticDescriptors.TypeParameterMustBeNullable
+                            : DiagnosticDescriptors.ParameterTypeMustBeNullable,
+                        argumentSyntax.GetLocation(),
+                        argumentSyntax.ToFullString());
+                    context.ReportDiagnostic(diagnostic);
                 }
+            }
 
-                // If type argument is a generic type, check itself
-                if (argument is INamedTypeSymbol namedTypeArgument &&
-                    namedTypeArgument.IsGenericType &&
-                    argumentSyntax is GenericNameSyntax nestedGenericName)
-                {
-                    CheckGenericTypeArguments(context, nestedGenericName);
-                }
+            // If type argument is a generic type, check itself
+            if (argument is INamedTypeSymbol namedTypeArgument &&
+                namedTypeArgument.IsGenericType &&
+                argumentSyntax is GenericNameSyntax nestedGenericName)
+            {
+                CheckGenericTypeArguments(context, nestedGenericName);
             }
         }
     }
