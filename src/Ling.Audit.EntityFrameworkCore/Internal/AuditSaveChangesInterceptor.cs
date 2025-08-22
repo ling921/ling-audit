@@ -9,14 +9,17 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Ling.Audit.EntityFrameworkCore.Internal;
 
-internal sealed class AuditInterceptor<TUserId> : SaveChangesInterceptor, IDisposable
+internal sealed class AuditSaveChangesInterceptor<TUserId> : SaveChangesInterceptor, IDisposable
 {
     private IReadOnlyList<AuditEntityEntry>? _entries;
 
     /// <inheritdoc/>
     public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result)
     {
-        InternalSavingChanges(eventData);
+        InternalSavingChangesAsync(eventData, default)
+            .ConfigureAwait(false)
+            .GetAwaiter()
+            .GetResult();
         return base.SavingChanges(eventData, result);
     }
 
@@ -32,13 +35,13 @@ internal sealed class AuditInterceptor<TUserId> : SaveChangesInterceptor, IDispo
     }
 
     /// <inheritdoc/>
-    public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+    public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData,
         InterceptionResult<int> result,
         CancellationToken cancellationToken = default)
     {
-        InternalSavingChanges(eventData);
-        return base.SavingChangesAsync(eventData, result, cancellationToken);
+        await InternalSavingChangesAsync(eventData, cancellationToken);
+        return await base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -55,14 +58,14 @@ internal sealed class AuditInterceptor<TUserId> : SaveChangesInterceptor, IDispo
         return result;
     }
 
-    internal void InternalSavingChanges(DbContextEventData eventData)
+    internal async Task InternalSavingChangesAsync(DbContextEventData eventData, CancellationToken cancellationToken)
     {
         var context = eventData.Context;
 
         if (context is null) return;
 
-        var userProvider = context.GetService<IAuditContextProvider<TUserId>>();
-        var logger = context.GetService<ILoggerFactory>().CreateLogger(GetType());
+        var userProvider = context.GetService<IAuditUserProvider<TUserId>>();
+        var handler = context.GetService<IAuditAnonymousHandler>();
         var options = context.GetAuditOptions();
         var entries = new List<AuditEntityEntry>();
         var now = DateTimeOffset.Now;
@@ -85,12 +88,11 @@ internal sealed class AuditInterceptor<TUserId> : SaveChangesInterceptor, IDispo
 
                     if (metadata.HasDeletedBy)
                     {
-                        if (!options.AllowAnonymousDelete &&
-                            !metadata.AllowsAnonymousOperation(EntityOperationType.Delete) &&
+                        if (!options.AllowAnonymous &&
+                            !metadata.IsAnonymousAllowed(DataOperation.Delete) &&
                             isUserIdDefaultValue)
                         {
-                            logger.LogError("Not allowed to delete entity '{entityType}' with anonymous user.", entityType);
-                            throw new InvalidOperationException($"Anonymous deletion of '{entityType.GetFriendlyName()}' is not allowed.");
+                            await handler.HandleAsync(entityType, DataOperation.Delete, entityEntry.Entity, cancellationToken);
                         }
                         entityEntry.Property(Constants.DeletedBy).CurrentValue = userId;
                     }
@@ -114,12 +116,11 @@ internal sealed class AuditInterceptor<TUserId> : SaveChangesInterceptor, IDispo
                     }
                     if (metadata.HasModifiedBy)
                     {
-                        if (!options.AllowAnonymousModify &&
-                            !metadata.AllowsAnonymousOperation(EntityOperationType.Update) &&
+                        if (!options.AllowAnonymous &&
+                            !metadata.IsAnonymousAllowed(DataOperation.Modify) &&
                             isUserIdDefaultValue)
                         {
-                            logger.LogError("Not allowed to modify entity '{entityType}' with anonymous user.", entityType);
-                            throw new InvalidOperationException($"Anonymous modification of {entityType.GetFriendlyName()} is not allowed.");
+                            await handler.HandleAsync(entityType, DataOperation.Modify, entityEntry.Entity, cancellationToken);
                         }
 
                         entityEntry.Property(Constants.ModifiedBy).CurrentValue = userId;
@@ -134,12 +135,12 @@ internal sealed class AuditInterceptor<TUserId> : SaveChangesInterceptor, IDispo
                     }
                     if (metadata.HasCreatedBy)
                     {
-                        if (!options.AllowAnonymousCreate &&
-                            !metadata.AllowsAnonymousOperation(EntityOperationType.Create) &&
+                        if (!options.AllowAnonymous &&
+                            !metadata.IsAnonymousAllowed(DataOperation.Create) &&
                             isUserIdDefaultValue)
                         {
-                            logger.LogError("Not allowed to create entity '{entityType}' with anonymous user.", entityType);
-                            throw new InvalidOperationException($"Anonymous creation of {entityType.GetFriendlyName()} is not allowed.");
+
+                            await handler.HandleAsync(entityType, DataOperation.Create, entityEntry.Entity, cancellationToken);
                         }
                         entityEntry.Property(Constants.CreatedBy).CurrentValue = userId;
                     }
@@ -179,7 +180,7 @@ internal sealed class AuditInterceptor<TUserId> : SaveChangesInterceptor, IDispo
             throw new InvalidOperationException("Unable to get entry information before saving changes.");
         }
 
-        var userProvider = context.GetService<IAuditContextProvider<TUserId>>();
+        var userProvider = context.GetService<IAuditUserProvider<TUserId>>();
         var serializer = context.GetService<IPropertySerializer>();
 
         var logs = _entries
@@ -227,8 +228,7 @@ internal sealed class AuditInterceptor<TUserId> : SaveChangesInterceptor, IDispo
 
     private static bool TryGetAuditEntry(EntityEntry entityEntry, [NotNullWhen(true)] out AuditEntityEntry? auditEntry)
     {
-        var entityInclude = entityEntry.Metadata.GetAuditInclude();
-        if (!entityInclude)
+        if (!entityEntry.Metadata.IsAuditable())
         {
             auditEntry = null;
             return false;
@@ -238,20 +238,20 @@ internal sealed class AuditInterceptor<TUserId> : SaveChangesInterceptor, IDispo
 
         foreach (var propertyEntry in entityEntry.Properties)
         {
-            var propertyInclude = propertyEntry.Metadata.GetAuditInclude();
-            if (propertyInclude && !Constants.PropertyNames.Contains(propertyEntry.Metadata.Name))
+            if (propertyEntry.Metadata.IsAuditable() &&
+                (entityEntry.State is EntityState.Added ||
+                !Equals(propertyEntry.OriginalValue, propertyEntry.CurrentValue)))
             {
-                if (entityEntry.State is not EntityState.Added && Equals(propertyEntry.OriginalValue, propertyEntry.CurrentValue))
-                {
-                    continue;
-                }
-
                 auditEntry.Properties.Add(new AuditPropertyEntry
                 {
                     Name = propertyEntry.Metadata.Name,
                     ValueType = propertyEntry.Metadata.ClrType,
-                    OriginalValue = entityEntry.State is EntityState.Added ? null : propertyEntry.OriginalValue,
-                    NewValue = entityEntry.State is EntityState.Deleted ? null : propertyEntry.CurrentValue
+                    OriginalValue = entityEntry.State is EntityState.Added
+                        ? null
+                        : propertyEntry.OriginalValue,
+                    NewValue = entityEntry.State is EntityState.Deleted
+                        ? null
+                        : propertyEntry.CurrentValue
                 });
             }
         }

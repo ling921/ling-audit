@@ -28,6 +28,7 @@ internal static class Constants
         CreatedBy,
         ModifiedAt,
         ModifiedBy,
+        IsDeleted,
         DeletedAt,
         DeletedBy,
     ];

@@ -30,13 +30,13 @@ internal sealed class AuditConventionSetPlugin : IConventionSetPlugin
     }
 
     /// <summary>
-    /// Convention to process <see cref="AuditIncludeAttribute"/> on entity types.
+    /// Convention to process <see cref="AuditableAttribute"/> on entity types.
     /// </summary>
     private sealed class AuditIncludeAttributeConvention :
 #if NET8_0_OR_GREATER
-        TypeAttributeConventionBase<AuditIncludeAttribute>
+        TypeAttributeConventionBase<AuditableAttribute>
 #else
-    EntityTypeAttributeConventionBase<AuditIncludeAttribute>
+    EntityTypeAttributeConventionBase<AuditableAttribute>
 #endif
     {
         /// <summary>
@@ -51,7 +51,7 @@ internal sealed class AuditConventionSetPlugin : IConventionSetPlugin
         /// <inheritdoc/>
         protected override void ProcessEntityTypeAdded(
             IConventionEntityTypeBuilder entityTypeBuilder,
-            AuditIncludeAttribute attribute,
+            AuditableAttribute attribute,
             IConventionContext<IConventionEntityTypeBuilder> context)
         {
             entityTypeBuilder.Metadata.SetAnnotation(Constants.AuditableAnnotationName, true);
@@ -59,9 +59,9 @@ internal sealed class AuditConventionSetPlugin : IConventionSetPlugin
     }
 
     /// <summary>
-    /// Convention to process <see cref="AuditIgnoreAttribute"/> on properties and fields.
+    /// Convention to process <see cref="NotAuditedAttribute"/> on properties and fields.
     /// </summary>
-    private sealed class AuditIgnoreAttributeConvention : PropertyAttributeConventionBase<AuditIgnoreAttribute>
+    private sealed class AuditIgnoreAttributeConvention : PropertyAttributeConventionBase<NotAuditedAttribute>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="AuditIgnoreAttributeConvention"/> class.
@@ -75,7 +75,7 @@ internal sealed class AuditConventionSetPlugin : IConventionSetPlugin
         /// <inheritdoc/>
         protected override void ProcessPropertyAdded(
             IConventionPropertyBuilder propertyBuilder,
-            AuditIgnoreAttribute attribute,
+            NotAuditedAttribute attribute,
             MemberInfo clrMember,
             IConventionContext context)
         {

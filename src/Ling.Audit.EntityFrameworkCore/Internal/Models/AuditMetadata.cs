@@ -5,10 +5,12 @@
 /// </summary>
 internal sealed class AuditMetadata
 {
+    public bool IsAuditable { get; set; }
+
     /// <summary>
     /// Gets or sets the operations that can be performed anonymously.
     /// </summary>
-    public EntityOperationType AnonymousOperations { get; set; }
+    public DataOperation AnonymousOperations { get; set; }
 
     /// <summary>
     /// Gets or sets the type of the user ID.
@@ -55,13 +57,14 @@ internal sealed class AuditMetadata
     /// </summary>
     /// <param name="operate">The operation to check.</param>
     /// <returns><see langword="true"/> if the operation can be performed anonymously; otherwise, <see langword="false"/>.</returns>
-    public bool AllowsAnonymousOperation(EntityOperationType operate) => AnonymousOperations.HasFlag(operate);
+    public bool IsAnonymousAllowed(DataOperation operate) => AnonymousOperations.HasFlag(operate);
 
     /// <summary>
     /// Combines two <see cref="AuditMetadata"/> instances using the bitwise OR operator.
     /// </summary>
     public static AuditMetadata operator |(AuditMetadata left, AuditMetadata right) => new()
     {
+        IsAuditable = right.IsAuditable,
         AnonymousOperations = left.AnonymousOperations | right.AnonymousOperations,
         UserIdType = left.UserIdType ?? right.UserIdType,
         HasCreatedAt = left.HasCreatedAt || right.HasCreatedAt,

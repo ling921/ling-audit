@@ -30,6 +30,8 @@ internal sealed class HttpAuditContextProvider : IAuditContextProvider<string>
 
     public HttpAuditContextProvider(ICurrentDbContext current)
     {
+        var httpContext = current.Context.GetService<IHttpContextAccessor>()?.HttpContext;
+
         _lazyContext = new Lazy<AuditContext>(() => new AuditContext(
             current.Context.GetService<ILogger<HttpAuditContextProvider>>(),
             current.Context.GetService<IHttpContextAccessor>(),
@@ -52,7 +54,7 @@ internal sealed class HttpAuditContextProvider : IAuditContextProvider<string>
                 return;
             }
 
-            Id = context.User.FindFirstValue(options.UserIdClaimType);
+            Id = context.User.Identity.Name(options.UserIdClaimType);
             Name = context.User.FindFirstValue(options.UserNameClaimType);
             IPAddress = context.Connection.RemoteIpAddress?.ToString();
 

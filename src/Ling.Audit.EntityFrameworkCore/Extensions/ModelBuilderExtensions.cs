@@ -47,7 +47,7 @@ public static class ModelBuilderExtensions
     /// Allowed anonymous operations to the table this entity is mapped to.
     /// </param>
     /// <returns>The same builder instance so that multiple calls can be chained.</returns>
-    public static EntityTypeBuilder IsAuditable(this EntityTypeBuilder entityTypeBuilder, EntityOperationType anonymousOperations = EntityOperationType.None)
+    public static EntityTypeBuilder IsAuditable(this EntityTypeBuilder entityTypeBuilder, DataOperation anonymousOperations = DataOperation.None)
     {
         ArgumentNullException.ThrowIfNull(entityTypeBuilder);
 
@@ -57,9 +57,9 @@ public static class ModelBuilderExtensions
         return entityTypeBuilder;
     }
 
-    /// <inheritdoc cref="IsAuditable(EntityTypeBuilder, EntityOperationType)"/>
+    /// <inheritdoc cref="IsAuditable(EntityTypeBuilder, DataOperation)"/>
     /// <typeparam name="TEntity">The entity type being configured.</typeparam>
-    public static EntityTypeBuilder<TEntity> IsAuditable<TEntity>(this EntityTypeBuilder<TEntity> entityTypeBuilder, EntityOperationType anonymousOperations = EntityOperationType.None)
+    public static EntityTypeBuilder<TEntity> IsAuditable<TEntity>(this EntityTypeBuilder<TEntity> entityTypeBuilder, DataOperation anonymousOperations = DataOperation.None)
         where TEntity : class
     {
         EntityTypeBuilder builder = entityTypeBuilder;
@@ -73,23 +73,23 @@ public static class ModelBuilderExtensions
     /// Configures whether to apply auditing to the column.
     /// </summary>
     /// <param name="propertyBuilder">The builder for the property being configured.</param>
-    /// <param name="enabled">Whether to audit the column, defaults to <see langword="false"/>.</param>
+    /// <param name="notAudited">Whether not to audit the column, defaults to <see langword="true"/>.</param>
     /// <returns>The same builder instance so that multiple calls can be chained.</returns>
-    public static PropertyBuilder IsAuditable(this PropertyBuilder propertyBuilder, bool enabled = false)
+    public static PropertyBuilder IsNotAudited(this PropertyBuilder propertyBuilder, bool notAudited = true)
     {
         ArgumentNullException.ThrowIfNull(propertyBuilder);
 
-        propertyBuilder.Metadata.SetAnnotation(Constants.AuditableAnnotationName, enabled);
+        propertyBuilder.Metadata.SetAnnotation(Constants.AuditableAnnotationName, !notAudited);
         return propertyBuilder;
     }
 
-    /// <inheritdoc cref="IsAuditable(PropertyBuilder, bool)"/>
+    /// <inheritdoc cref="IsNotAudited(PropertyBuilder, bool)"/>
     /// <typeparam name="TProperty">The type of the property being configured.</typeparam>
-    public static PropertyBuilder<TProperty> IsAuditable<TProperty>(this PropertyBuilder<TProperty> propertyBuilder, bool enabled = false)
+    public static PropertyBuilder<TProperty> IsNotAudited<TProperty>(this PropertyBuilder<TProperty> propertyBuilder, bool notAudited = true)
     {
         PropertyBuilder builder = propertyBuilder;
 
-        builder.IsAuditable(enabled);
+        builder.IsNotAudited(notAudited);
 
         return propertyBuilder;
     }
@@ -288,17 +288,40 @@ public static class ModelBuilderExtensions
     /// </summary>
     /// <param name="annotatable">The annotatable to check.</param>
     /// <returns><see langword="true"/> if auditing is included; otherwise, <see langword="false"/>.</returns>
-    internal static bool GetAuditInclude(this IReadOnlyAnnotatable annotatable)
+    internal static bool IsAuditable(this IReadOnlyAnnotatable annotatable)
     {
         ArgumentNullException.ThrowIfNull(annotatable);
 
         var value = annotatable.FindAnnotation(Constants.AuditableAnnotationName)?.Value;
-        return annotatable switch
+
+        if (annotatable is IEntityType)
         {
-            IEntityType => value is true,   // Entity auditable defaults to false
-            IProperty => value is false,    // Entity property or field auditable defaults to true
-            _ => throw new InvalidOperationException()
-        };
+            // Entity auditable is false by default
+            return value is true;
+        }
+        else if (annotatable is IProperty property)
+        {
+            if (property.DeclaringType.FindAnnotation(Constants.AuditableAnnotationName) is { Value: true })
+            {
+                if (Constants.PropertyNames.Contains(property.Name))
+                {
+                    // Includes audit property if configured as true
+                    return value is true;
+                }
+
+                // Includes other property if not configured as false
+                return value is not false;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            // Returns false if not IEntityType or IProperty
+            return false;
+        }
     }
 
     #endregion Internal Methods

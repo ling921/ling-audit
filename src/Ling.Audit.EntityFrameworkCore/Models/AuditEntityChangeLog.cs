@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.ChangeTracking;
+using System.Diagnostics;
 
 namespace Ling.Audit.EntityFrameworkCore;
 
@@ -6,6 +7,7 @@ namespace Ling.Audit.EntityFrameworkCore;
 /// Represents the audit log for entities.
 /// </summary>
 /// <typeparam name="TUserId">The type of the user ID.</typeparam>
+[DebuggerDisplay("Schema = {DatabaseSchema}, Table = {TableName}, PrimaryKey = {EntityKey}, EventType = {EventType}, PropertyCount = {Details.Count}")]
 public class AuditEntityChangeLog<[MustNull] TUserId>
 {
     /// <summary>
@@ -66,5 +68,5 @@ public class AuditEntityChangeLog<[MustNull] TUserId>
     /// <summary>
     /// Gets or sets the details of this audit log.
     /// </summary>
-    public virtual ICollection<AuditFieldChangeLog> Details { get; set; } = new List<AuditFieldChangeLog>();
+    public virtual ICollection<AuditFieldChangeLog> Details { get; set; } = [];
 }

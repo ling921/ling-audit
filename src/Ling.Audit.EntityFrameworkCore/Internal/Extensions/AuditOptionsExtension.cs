@@ -1,14 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions.Infrastructure;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Options;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 
 namespace Ling.Audit.EntityFrameworkCore.Internal.Extensions;
 
 internal sealed class AuditOptionsExtension<TUserProvider, TUserId> : IDbContextOptionsExtension
-    where TUserProvider : class, IAuditContextProvider<TUserId>
+    where TUserProvider : class, IAuditUserProvider<TUserId>
 {
     public Action<AuditOptions>? Action { get; }
 
@@ -28,24 +29,38 @@ internal sealed class AuditOptionsExtension<TUserProvider, TUserId> : IDbContext
     /// <inheritdoc/>
     public void ApplyServices(IServiceCollection services)
     {
+        JsonSerializerOptions? jsonSerializerOptions = null;
+
         // Configure audit options
         if (Action is null)
         {
-            services.TryAddEnumerable(ServiceDescriptor.Singleton<IConfigureOptions<AuditOptions>, AuditOptionsConfigure>());
+            services.AddOptions<AuditOptions>()
+                .Configure<ICurrentDbContext>((options, context) =>
+                    context.Context.GetService<IConfiguration>()
+                        .GetSection(Constants.ConfigurationSection)
+                        .Bind(options));
         }
         else
         {
             services.Configure(Action);
+
+            var tempOptions = new AuditOptions();
+            Action.Invoke(new AuditOptions());
+            jsonSerializerOptions = tempOptions.PropertySerializerOptions;
         }
 
         // Add serializer for property conversion
-        services.TryAddSingleton<IPropertySerializer, DefaultPropertySerializer>();
+        services.TryAddSingleton<IPropertySerializer>(
+            new DefaultPropertySerializer(jsonSerializerOptions));
+
+        // Add handler for anonymous audit operations
+        services.TryAddSingleton<IAuditAnonymousHandler, DefaultAuditAnonymousHandler>();
 
         // Add custom plugin for audit annotations
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IConventionSetPlugin, AuditConventionSetPlugin>());
 
         // Add audit context for user
-        services.TryAddScoped<IAuditContextProvider<TUserId>, TUserProvider>();
+        services.TryAddScoped<IAuditUserProvider<TUserId>, TUserProvider>();
     }
 
     /// <inheritdoc/>

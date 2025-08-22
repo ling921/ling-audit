@@ -8,34 +8,12 @@ namespace Ling.Audit.EntityFrameworkCore;
 public class AuditOptions
 {
     /// <summary>
-    /// Whether to allow anonymous creation of audit entities, default to <see langword="false"/>.
+    /// Whether to allow anonymous operation of audit entities, default to <see langword="false"/>.
     /// <para>
-    /// An <see cref="InvalidOperationException"/> will be thrown when anonymous creation, you can
-    /// use <see cref="AuditIncludeAttribute"/> to specify anonymous operations that entities can perform.
+    /// <see cref="IAuditAnonymousHandler.HandleAsync(Type, DataOperation, object?, CancellationToken)"/> will be invoke when anonymous operation occurred.
     /// </para>
-    /// <para>If <see langword="true"/>, it will allow anonymous creation for all audit entities.</para>
     /// </summary>
-    public bool AllowAnonymousCreate { get; set; }
-
-    /// <summary>
-    /// Whether to allow anonymous modification of audit entities, default to <see langword="false"/>.
-    /// <para>
-    /// An <see cref="InvalidOperationException"/> will be thrown when anonymous modification, you
-    /// can use <see cref="AuditIncludeAttribute"/> to specify anonymous operations that entities can perform.
-    /// </para>
-    /// <para>If <see langword="true"/>, it will allow anonymous modification for all audit entities.</para>
-    /// </summary>
-    public bool AllowAnonymousModify { get; set; }
-
-    /// <summary>
-    /// Whether to allow anonymous deletion of audit entities, default to <see langword="false"/>.
-    /// <para>
-    /// An <see cref="InvalidOperationException"/> will be thrown when anonymous deletion, you can
-    /// use <see cref="AuditIncludeAttribute"/> to specify anonymous operations that entities can perform.
-    /// </para>
-    /// <para>If <see langword="true"/>, it will allow anonymous deletion for all audit entities.</para>
-    /// </summary>
-    public bool AllowAnonymousDelete { get; set; }
+    public bool AllowAnonymous { get; set; }
 
     /// <summary>
     /// Comments.

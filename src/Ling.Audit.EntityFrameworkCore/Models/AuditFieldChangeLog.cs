@@ -1,8 +1,11 @@
-﻿namespace Ling.Audit.EntityFrameworkCore;
+﻿using System.Diagnostics;
+
+namespace Ling.Audit.EntityFrameworkCore;
 
 /// <summary>
 /// Represents the detail of <see cref="AuditEntityChangeLog{TUserId}"/>.
 /// </summary>
+[DebuggerDisplay("{FieldName} = {OriginalValue} => {NewValue}, Type = {ValueType}")]
 public class AuditFieldChangeLog
 {
     /// <summary>
