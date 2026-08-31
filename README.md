@@ -274,6 +274,16 @@ The former `Ling.EntityFrameworkCore.Audit` package was renamed to `Ling.Audit.E
 
 See the [2.0 migration guide](docs/migrating-to-2.0.md) for package, API, transaction, and data-format changes.
 
+## Samples
+
+The repository includes a runnable ASP.NET Core Minimal API sample in [`samples/`](samples/). It combines `Ling.Audit`, `Ling.Audit.EntityFrameworkCore`, and `Ling.Audit.AspNetCore` with SQLite, and demonstrates authenticated user resolution, explicit transactions, soft deletion, and audit-log queries.
+
+```shell
+dotnet run --project samples/Ling.Audit.Sample/Ling.Audit.Sample.csproj
+```
+
+See [`samples/README.md`](samples/README.md) for the request examples and production notes.
+
 ## Development
 
 ```shell
