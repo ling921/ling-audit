@@ -56,11 +56,6 @@ internal class AuditTypeAnalyzer : DiagnosticAnalyzer
 
     private static void AnalyzeReferenceTypeDeclarationNode(SyntaxNodeAnalysisContext context, TypeDeclarationSyntax typeDeclaration, INamedTypeSymbol typeSymbol)
     {
-        if (typeDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword))
-        {
-            return;
-        }
-
         var existingProperties = typeSymbol.GetMembers()
             .Where(m => m.Kind == SymbolKind.Property)
             .Cast<IPropertySymbol>()
@@ -69,19 +64,34 @@ internal class AuditTypeAnalyzer : DiagnosticAnalyzer
             .Select(p => p.Name)
             .ToList();
 
-        foreach (var propertyName in GetAuditPropertyNames(context, typeSymbol))
+        var requiresGeneration = GetAuditPropertyNames(context, typeSymbol)
+            .Any(propertyName => !existingProperties.Contains(propertyName));
+        if (!requiresGeneration)
         {
-            if (!existingProperties.Contains(propertyName))
+            return;
+        }
+
+        foreach (var containingType in typeDeclaration.Ancestors().OfType<TypeDeclarationSyntax>())
+        {
+            if (!containingType.Modifiers.Any(SyntaxKind.PartialKeyword))
             {
-                var typeName = typeSymbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+                var containingSymbol = context.SemanticModel.GetDeclaredSymbol(containingType, context.CancellationToken);
                 var diagnostic = Diagnostic.Create(
                     DiagnosticDescriptors.PartialType,
-                    typeDeclaration.Identifier.GetLocation(),
-                    typeName);
+                    containingType.Identifier.GetLocation(),
+                    containingSymbol?.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat) ?? containingType.Identifier.Text);
                 context.ReportDiagnostic(diagnostic);
-
                 return;
             }
+        }
+
+        if (!typeDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword))
+        {
+            var typeName = typeSymbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+            context.ReportDiagnostic(Diagnostic.Create(
+                DiagnosticDescriptors.PartialType,
+                typeDeclaration.Identifier.GetLocation(),
+                typeName));
         }
     }
 

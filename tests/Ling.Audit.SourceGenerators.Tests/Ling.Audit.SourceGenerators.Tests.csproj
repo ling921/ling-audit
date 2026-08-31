@@ -31,4 +31,4 @@
     <ProjectReference Include="..\..\src\Ling.Audit.SourceGenerators\Ling.Audit.SourceGenerators.csproj" />
   </ItemGroup>
 
-</Project> 
+</Project>

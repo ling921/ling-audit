@@ -100,6 +100,27 @@ public class AuditTypeAnalyzerTests
     }
 
     [Fact]
+    public async Task NestedPartialClass_WithNonPartialContainer_ReportsDiagnosticForContainer()
+    {
+        const string test = """
+            using Ling.Audit;
+
+            public class Container
+            {
+                public partial class MyEntity : IHasCreator<string>
+                {
+                }
+            }
+            """;
+
+        var expected = VerifyCS.Diagnostic(DiagnosticDescriptors.PartialType)
+            .WithLocation(3, 14)
+            .WithArguments("Container");
+
+        await VerifyCS.VerifyAnalyzerAsync(test, expected);
+    }
+
+    [Fact]
     public async Task Record_WithoutPartialKeyword_ReportsDiagnostic()
     {
         const string test = """

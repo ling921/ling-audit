@@ -21,8 +21,11 @@ partial class AuditPropertyGenerator
 
             """);
 
-        cb.AppendLine($"namespace {namespaceName}")
-            .OpenBrace();
+        if (!string.IsNullOrEmpty(namespaceName))
+        {
+            cb.AppendLine($"namespace {namespaceName}")
+                .OpenBrace();
+        }
 
         var i = 0;
         for (; i < containingTypes.Count - 1; i++)
@@ -54,8 +57,16 @@ partial class AuditPropertyGenerator
                 _ => string.Empty,
             };
 
-            cb.AppendFormatLine("/// <inheritdoc cref=\"global::{0}.{1}\"/>", inheritDocClass, property.PropertyName)
-                .AppendFormatLine("public {0}{1} {2} {{ get; set; }}", virtualModifier, property.PropertyType, property.PropertyName);
+            if (property.InterfaceName.EndsWith("`1", StringComparison.Ordinal))
+            {
+                cb.AppendLine("/// <inheritdoc/>");
+            }
+            else
+            {
+                cb.AppendFormatLine("/// <inheritdoc cref=\"global::{0}.{1}\"/>", inheritDocClass, property.PropertyName);
+            }
+
+            cb.AppendFormatLine("public {0}{1} {2} {{ get; set; }}", virtualModifier, property.PropertyType, property.PropertyName);
 
             if (++index < properties.Count)
             {
@@ -91,7 +102,7 @@ partial class AuditPropertyGenerator
     {
         var types = new List<TypeDeclaration>();
         SyntaxNode? parent = typeDeclaration;
-        var namespaceName = "global::System";
+        var namespaceName = string.Empty;
 
         while (parent != null)
         {

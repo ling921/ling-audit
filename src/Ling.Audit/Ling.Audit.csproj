@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageOutputPath>.nuget</PackageOutputPath>
     <IncludeSymbols>true</IncludeSymbols>
@@ -43,6 +43,12 @@
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="all" />
   </ItemGroup>
 
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>Ling.Audit.EntityFrameworkCore</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
   <!-- Source Generator -->
   <ItemGroup>
     <ProjectReference Include="..\Ling.Audit.SourceGenerators\Ling.Audit.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
@@ -55,7 +61,7 @@
   </ItemGroup>
 
   <!-- Source Generator Output -->
-  <Target Name="_AddToOutput" BeforeTargets="GetTargetPath">
+  <Target Name="_AddToOutput" BeforeTargets="GetTargetPath" Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <ItemGroup>
       <TfmSpecificPackageFile Include="$(ProjectDir)..\Ling.Audit.SourceGenerators\bin\$(Configuration)\netstandard2.0\Ling.Audit.SourceGenerators.dll" PackagePath="analyzers/dotnet/cs" />
     </ItemGroup>

@@ -142,6 +142,33 @@ namespace Ling.Audit.SourceGenerators.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The parameter type must be nullable. This ensures that the parameter can represent the absence of a value..
+        /// </summary>
+        internal static string ParameterTypeMustBeNullable_Description {
+            get {
+                return ResourceManager.GetString("ParameterTypeMustBeNullable_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The parameter type inferred from &apos;{0}&apos; must be nullable.
+        /// </summary>
+        internal static string ParameterTypeMustBeNullable_Message {
+            get {
+                return ResourceManager.GetString("ParameterTypeMustBeNullable_Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Parameter type must be nullable.
+        /// </summary>
+        internal static string ParameterTypeMustBeNullable_Title {
+            get {
+                return ResourceManager.GetString("ParameterTypeMustBeNullable_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The type parameter is marked with the MustNullable attribute, indicating that it must be a nullable type. This ensures that the type can represent the absence of a value..
         /// </summary>
         internal static string TypeParameterMustBeNullable_Description {

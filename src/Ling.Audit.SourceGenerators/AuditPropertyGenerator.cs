@@ -14,12 +14,8 @@ public sealed partial class AuditPropertyGenerator : IIncrementalGenerator
         var declarations = context.SyntaxProvider
             .CreateSyntaxProvider(
                 predicate: static (s, _) => IsSyntaxTargetForGeneration(s),
-                transform: static (ctx, _) => ctx)
-            .Collect()
-            .SelectMany((ctxs, _) => ctxs
-                .GroupBy(ctx => ctx.Node.SyntaxTree)
-                .Select(group => GetGenerationContext(group.First()))
-                .Where(ctx => ctx.ShouldGenerate));
+                transform: static (ctx, _) => GetGenerationContext(ctx))
+            .Where(static ctx => ctx.ShouldGenerate);
 
         context.RegisterSourceOutput(declarations, Execute);
     }

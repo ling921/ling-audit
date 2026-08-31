@@ -47,9 +47,11 @@ internal static class CSharpCodeFixVerifier<TAnalyzer, TCodeFix>
 
     private class Test : CSharpCodeFixTest<TAnalyzer, TCodeFix, DefaultVerifier>
     {
+        protected override string DefaultTestProjectName => "Ling.Audit.Tests";
+
         public Test()
         {
-            TestState.AdditionalReferences.Add(typeof(MustNullAttribute).Assembly);
+            TestState.AdditionalReferences.Add(typeof(ISoftDelete).Assembly);
             TestState.ReferenceAssemblies = ReferenceAssemblies.Net.Net80;
         }
 

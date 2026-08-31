@@ -27,9 +27,11 @@ internal static class CSharpAnalyzerVerifier<TAnalyzer>
 
     private class Test : CSharpAnalyzerTest<TAnalyzer, DefaultVerifier>
     {
+        protected override string DefaultTestProjectName => "Ling.Audit.Tests";
+
         public Test()
         {
-            TestState.AdditionalReferences.Add(typeof(MustNullAttribute).Assembly);
+            TestState.AdditionalReferences.Add(typeof(ISoftDelete).Assembly);
             TestState.ReferenceAssemblies = ReferenceAssemblies.Net.Net80;
         }
 
