@@ -21,7 +21,7 @@ env:
   NUGET_DIRECTORY: ${{ github.workspace }}/artifacts/packages
 
 jobs:
-  build-and-pack:
+  test:
     permissions:
       contents: read
     runs-on: ubuntu-latest
