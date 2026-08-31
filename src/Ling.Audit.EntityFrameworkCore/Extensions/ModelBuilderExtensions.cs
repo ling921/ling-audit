@@ -34,7 +34,7 @@ public static class ModelBuilderExtensions
                 var propertyParameter = Expression.Property(typeParameter, Constants.IsDeleted);
                 Expression body = Expression.Not(propertyParameter);
 
-                if (entityType.GetQueryFilter() is { } existingFilter)
+                if (GetExistingQueryFilter(entityType) is { } existingFilter)
                 {
                     var existingBody = new ReplacingExpressionVisitor(
                         existingFilter.Parameters[0],
@@ -44,7 +44,19 @@ public static class ModelBuilderExtensions
 
                 var lambda = Expression.Lambda(body, typeParameter);
 
+#if NET10_0_OR_GREATER
+                var hasAnonymousFilter = entityType.GetDeclaredQueryFilters().Any(filter => filter.IsAnonymous);
+                if (hasAnonymousFilter)
+                {
+                    builder.Entity(type).HasQueryFilter(lambda);
+                }
+                else
+                {
+                    builder.Entity(type).HasQueryFilter("Ling.Audit.SoftDelete", lambda);
+                }
+#else
                 builder.Entity(type).HasQueryFilter(lambda);
+#endif
             }
         }
     }
@@ -335,6 +347,40 @@ public static class ModelBuilderExtensions
     }
 
     #endregion Internal Methods
+
+    private static LambdaExpression? GetExistingQueryFilter(IReadOnlyEntityType entityType)
+    {
+#if NET10_0_OR_GREATER
+        var filters = entityType.GetDeclaredQueryFilters();
+        if (filters.Count == 0)
+        {
+            return null;
+        }
+
+        var expressions = filters
+            .Where(filter => filter.IsAnonymous)
+            .Select(filter => filter.Expression)
+            .OfType<LambdaExpression>()
+            .ToArray();
+        if (expressions.Length == 0)
+        {
+            return null;
+        }
+
+        var parameter = expressions[0].Parameters[0];
+        Expression body = expressions[0].Body;
+        foreach (var filter in expressions.Skip(1))
+        {
+            var filterBody = new ReplacingExpressionVisitor(filter.Parameters[0], parameter)
+                .Visit(filter.Body)!;
+            body = Expression.AndAlso(body, filterBody);
+        }
+
+        return Expression.Lambda(body, parameter);
+#else
+        return entityType.GetQueryFilter();
+#endif
+    }
 
     private sealed class ReplacingExpressionVisitor(Expression source, Expression target) : ExpressionVisitor
     {

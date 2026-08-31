@@ -24,7 +24,7 @@ public class AuditPropertyGeneratorTests
             #pragma warning disable
             #nullable enable annotations
 
-            [global::System.CodeDom.Compiler.GeneratedCode("Ling.Audit.SourceGenerators", "2.0.1")]
+            [global::System.CodeDom.Compiler.GeneratedCode("Ling.Audit.SourceGenerators", "2.1.0")]
             [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
             partial class GlobalEntity
             {
@@ -61,7 +61,7 @@ public class AuditPropertyGeneratorTests
 
             namespace Test
             {
-                [global::System.CodeDom.Compiler.GeneratedCode("Ling.Audit.SourceGenerators", "2.0.1")]
+                [global::System.CodeDom.Compiler.GeneratedCode("Ling.Audit.SourceGenerators", "2.1.0")]
                 [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
                 partial class FirstEntity
                 {
@@ -80,7 +80,7 @@ public class AuditPropertyGeneratorTests
 
             namespace Test
             {
-                [global::System.CodeDom.Compiler.GeneratedCode("Ling.Audit.SourceGenerators", "2.0.1")]
+                [global::System.CodeDom.Compiler.GeneratedCode("Ling.Audit.SourceGenerators", "2.1.0")]
                 [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
                 partial class SecondEntity
                 {

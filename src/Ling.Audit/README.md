@@ -2,6 +2,14 @@
 
 A source generator for automatically implementing audit properties in C# classes.
 
+## Installation
+
+```shell
+dotnet add package Ling.Audit
+```
+
+This package contains the audit contracts, attributes, analyzer, and source generator. It does not depend on Entity Framework Core or ASP.NET Core, so it can be used by domain and shared contract projects.
+
 ## Basic Usage
 
 ```csharp
@@ -95,4 +103,4 @@ public partial class Blog
 
 ## API Reference
 
-For detailed API documentation, visit our [GitHub repository](https://github.com/ling921/ling-audit).
+For persistence behavior, use [Ling.Audit.EntityFrameworkCore](https://www.nuget.org/packages/Ling.Audit.EntityFrameworkCore). For ASP.NET Core request context integration, use [Ling.Audit.AspNetCore](https://www.nuget.org/packages/Ling.Audit.AspNetCore).

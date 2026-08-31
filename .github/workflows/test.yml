@@ -71,8 +71,10 @@ jobs:
           unzip -Z1 "$core" | grep -Fx 'lib/netstandard2.0/Ling.Audit.dll'
           unzip -Z1 "$efcore" | grep -Fx 'lib/net6.0/Ling.Audit.EntityFrameworkCore.dll'
           unzip -Z1 "$efcore" | grep -Fx 'lib/net9.0/Ling.Audit.EntityFrameworkCore.dll'
+          unzip -Z1 "$efcore" | grep -Fx 'lib/net10.0/Ling.Audit.EntityFrameworkCore.dll'
           unzip -Z1 "$aspnetcore" | grep -Fx 'lib/net6.0/Ling.Audit.AspNetCore.dll'
           unzip -Z1 "$aspnetcore" | grep -Fx 'lib/net9.0/Ling.Audit.AspNetCore.dll'
+          unzip -Z1 "$aspnetcore" | grep -Fx 'lib/net10.0/Ling.Audit.AspNetCore.dll'
 
       - name: Verify package consumption
         run: |

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.19" />
+    <ProjectReference Include="..\..\src\Ling.Audit.AspNetCore\Ling.Audit.AspNetCore.csproj" />
+    <ProjectReference Include="..\Ling.Audit.Sample.Contracts\Ling.Audit.Sample.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>
