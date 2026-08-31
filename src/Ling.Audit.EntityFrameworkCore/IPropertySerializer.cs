@@ -51,9 +51,6 @@ internal sealed class DefaultPropertySerializer : IPropertySerializer
         var options = JsonSerializerOptions.Web;
 #else
         var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
-#if NET8_0
-        options.MakeReadOnly();
-#endif
 #endif
         return options;
     }

@@ -15,7 +15,7 @@ namespace Ling.Audit.EntityFrameworkCore.Tests.Interceptors
             // Act
             interceptor.SaveChangesBefore(context);
 
-            // Assert ÑéÖ¤Ã»ÓÐ½øÐÐÈÎºÎÉó¼Æ×Ö¶ÎµÄÐÞ¸Ä
+            // Assert ï¿½ï¿½Ö¤Ã»ï¿½Ð½ï¿½ï¿½ï¿½ï¿½Îºï¿½ï¿½ï¿½ï¿½ï¿½Ö¶Îµï¿½ï¿½Þ¸ï¿½
             var entry = context.ChangeTracker.Entries().First();
             Assert.Null(entry.Property("CreatedAt").CurrentValue);
             Assert.Null(entry.Property("CreatedBy").CurrentValue);

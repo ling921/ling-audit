@@ -41,7 +41,7 @@ partial class AuditPropertyGenerator
             globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Included,
             typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
             genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
-            miscellaneousOptions: SymbolDisplayMiscellaneousOptions.ExpandNullable | SymbolDisplayMiscellaneousOptions.IncludeNotNullableReferenceTypeModifier
+            miscellaneousOptions: SymbolDisplayMiscellaneousOptions.ExpandNullable
         );
 
         foreach (var @interface in allInterfaces)
@@ -113,9 +113,9 @@ partial class AuditPropertyGenerator
     {
         var sb = new StringBuilder();
 
-        if (!string.IsNullOrEmpty(namedTypeSymbol.ContainingNamespace?.ToString()))
+        if (namedTypeSymbol.ContainingNamespace is { IsGlobalNamespace: false } containingNamespace)
         {
-            sb.Append(namedTypeSymbol.ContainingNamespace).Append('.');
+            sb.Append(containingNamespace).Append('.');
         }
 
         BuildTypeFullName(namedTypeSymbol, sb);

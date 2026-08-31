@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Ling.Audit.EntityFrameworkCore.Internal.Models;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions.Infrastructure;
 using System.Reflection;
@@ -55,6 +56,11 @@ internal sealed class AuditConventionSetPlugin : IConventionSetPlugin
             IConventionContext<IConventionEntityTypeBuilder> context)
         {
             entityTypeBuilder.Metadata.SetAnnotation(Constants.AuditableAnnotationName, true);
+            entityTypeBuilder.Metadata.SetAnnotation(Constants.MetadataAnnotationName, new AuditMetadata
+            {
+                IsAuditable = true,
+                AnonymousOperations = attribute.AllowedAnonymous,
+            });
         }
     }
 

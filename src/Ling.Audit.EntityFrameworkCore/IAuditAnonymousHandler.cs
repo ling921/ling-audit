@@ -1,20 +1,13 @@
-﻿using Microsoft.Extensions.Logging;
-
 namespace Ling.Audit.EntityFrameworkCore;
 
 /// <summary>
-/// Interface for handling anonymous audit operations.
+/// Handles an operation for which no audit user could be resolved.
 /// </summary>
 public interface IAuditAnonymousHandler
 {
     /// <summary>
-    /// Handles anonymous audit operation for the specified entity.
+    /// Handles an anonymous audit operation for the specified entity.
     /// </summary>
-    /// <param name="entityType">The type of the entity being audited.</param>
-    /// <param name="operation">The data operation being performed.</param>
-    /// <param name="entity">The entity instance being audited.</param>
-    /// <param name="cancellationToken">A token to cancel the operation.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
     Task HandleAsync(
         Type entityType,
         DataOperation operation,
@@ -23,25 +16,17 @@ public interface IAuditAnonymousHandler
 }
 
 /// <summary>
-/// Default implementation of <see cref="IAuditAnonymousHandler"/> that logs anonymous operations.
+/// Rejects anonymous operations unless they were explicitly allowed.
 /// </summary>
-internal sealed class DefaultAuditAnonymousHandler(
-    ILogger<DefaultAuditAnonymousHandler> logger)
-    : IAuditAnonymousHandler
+internal sealed class DefaultAuditAnonymousHandler : IAuditAnonymousHandler
 {
-    /// <inheritdoc/>
     public Task HandleAsync(
         Type entityType,
         DataOperation operation,
         object? entity,
         CancellationToken cancellationToken = default)
     {
-        logger.LogWarning(
-            "Anonymous {Operation} operation detected on entity type {EntityType}. Entity: {@Entity}",
-            operation,
-            entityType.FullName,
-            entity);
-
-        return Task.CompletedTask;
+        throw new InvalidOperationException(
+            $"Anonymous {operation} operation is not allowed for entity type '{entityType.FullName}'.");
     }
 }

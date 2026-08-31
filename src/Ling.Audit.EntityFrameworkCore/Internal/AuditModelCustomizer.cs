@@ -107,6 +107,21 @@ internal sealed class AuditModelCustomizer<TUserId> : ModelCustomizer
                    .IsRequired(false)
                    .HasComment("Name of the user who changed the entity.");
 
+            builder.Property(al => al.IPAddress)
+                   .IsUnicode(false)
+                   .HasMaxLength(64)
+                   .IsRequired(false)
+                   .HasComment("IP address of the client that made the change.");
+
+            builder.Property(al => al.ClientName)
+                   .IsUnicode(true)
+                   .HasMaxLength(512)
+                   .IsRequired(false)
+                   .HasComment("Name of the client that made the change.");
+
+            builder.HasIndex(al => new { al.EntityTypeName, al.EntityKey, al.EventTime });
+            builder.HasIndex(al => new { al.UserId, al.EventTime });
+
             builder.HasMany(al => al.Details)
                    .WithOne()
                    .HasForeignKey(ald => ald.EntityLogId)

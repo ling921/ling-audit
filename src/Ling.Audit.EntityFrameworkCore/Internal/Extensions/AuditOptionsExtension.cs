@@ -45,7 +45,7 @@ internal sealed class AuditOptionsExtension<TUserProvider, TUserId> : IDbContext
             services.Configure(Action);
 
             var tempOptions = new AuditOptions();
-            Action.Invoke(new AuditOptions());
+            Action.Invoke(tempOptions);
             jsonSerializerOptions = tempOptions.PropertySerializerOptions;
         }
 
@@ -55,6 +55,9 @@ internal sealed class AuditOptionsExtension<TUserProvider, TUserId> : IDbContext
 
         // Add handler for anonymous audit operations
         services.TryAddSingleton<IAuditAnonymousHandler, DefaultAuditAnonymousHandler>();
+
+        // Add the UTC time source used for audit fields and log events.
+        services.TryAddSingleton<IAuditTimeProvider, SystemAuditTimeProvider>();
 
         // Add custom plugin for audit annotations
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IConventionSetPlugin, AuditConventionSetPlugin>());
@@ -70,19 +73,24 @@ internal sealed class AuditOptionsExtension<TUserProvider, TUserId> : IDbContext
 
     private class ExtensionInfo : DbContextOptionsExtensionInfo
     {
+        private readonly AuditOptionsExtension<TUserProvider, TUserId> _extension;
+
         public override bool IsDatabaseProvider { get; }
         public override string LogFragment { get; } = string.Empty;
 
         public ExtensionInfo(IDbContextOptionsExtension extension) : base(extension)
         {
+            _extension = (AuditOptionsExtension<TUserProvider, TUserId>)extension;
         }
 
-        public override int GetServiceProviderHashCode() => 0;
+        public override int GetServiceProviderHashCode() => _extension.Action?.GetHashCode() ?? 0;
 
-        public override bool ShouldUseSameServiceProvider(DbContextOptionsExtensionInfo other) => other is ExtensionInfo;
+        public override bool ShouldUseSameServiceProvider(DbContextOptionsExtensionInfo other) =>
+            other is ExtensionInfo info && ReferenceEquals(_extension.Action, info._extension.Action);
 
         public override void PopulateDebugInfo(IDictionary<string, string> debugInfo)
         {
+            debugInfo["Ling.Audit:Options"] = GetServiceProviderHashCode().ToString();
         }
     }
 }

@@ -42,4 +42,4 @@ public class EntityOperationTypeTests
         // Assert
         EntityOperationType.All.Should().Be(EntityOperationType.Create | EntityOperationType.Update | EntityOperationType.Delete);
     }
-} 
+}

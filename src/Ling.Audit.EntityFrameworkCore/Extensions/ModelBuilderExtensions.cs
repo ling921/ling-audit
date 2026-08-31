@@ -32,7 +32,17 @@ public static class ModelBuilderExtensions
             {
                 var typeParameter = Expression.Parameter(type, "e");
                 var propertyParameter = Expression.Property(typeParameter, Constants.IsDeleted);
-                var lambda = Expression.Lambda(Expression.Not(propertyParameter), typeParameter);
+                Expression body = Expression.Not(propertyParameter);
+
+                if (entityType.GetQueryFilter() is { } existingFilter)
+                {
+                    var existingBody = new ReplacingExpressionVisitor(
+                        existingFilter.Parameters[0],
+                        typeParameter).Visit(existingFilter.Body)!;
+                    body = Expression.AndAlso(existingBody, body);
+                }
+
+                var lambda = Expression.Lambda(body, typeParameter);
 
                 builder.Entity(type).HasQueryFilter(lambda);
             }
@@ -325,6 +335,12 @@ public static class ModelBuilderExtensions
     }
 
     #endregion Internal Methods
+
+    private sealed class ReplacingExpressionVisitor(Expression source, Expression target) : ExpressionVisitor
+    {
+        public override Expression? Visit(Expression? node) =>
+            node == source ? target : base.Visit(node);
+    }
 
     #region Private Methods
 

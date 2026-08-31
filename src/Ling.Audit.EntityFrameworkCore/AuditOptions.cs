@@ -26,6 +26,11 @@ public class AuditOptions
     public bool AuditNoFieldChangeEntity { get; set; }
 
     /// <summary>
+    /// Gets or sets the transaction guarantee required when audit logs are persisted.
+    /// </summary>
+    public AuditTransactionMode TransactionMode { get; set; }
+
+    /// <summary>
     /// Gets or sets <see cref="JsonSerializerOptions"/> for default <see cref="IPropertySerializer"/>.
     /// </summary>
     public JsonSerializerOptions? PropertySerializerOptions { get; set; }
@@ -49,12 +54,12 @@ public class AuditEntityComments
     /// <summary>
     /// Comment to ModifiedAt property.
     /// </summary>
-    public string ModifiedAt { get; set; } = "The primary key of the user who modified this entity.";
+    public string ModifiedAt { get; set; } = "The date and time when modified this entity.";
 
     /// <summary>
     /// Comment to ModifiedBy property.
     /// </summary>
-    public string ModifiedBy { get; set; } = "The date and time when modified this entity.";
+    public string ModifiedBy { get; set; } = "The primary key of the user who modified this entity.";
 
     /// <summary>
     /// Comment to IsDeleted property.

@@ -1,0 +1,114 @@
+name: Build and Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+    branches:
+      - master
+      - develop
+
+concurrency:
+  group: test-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  DOTNET_NOLOGO: true
+  NUGET_DIRECTORY: ${{ github.workspace }}/artifacts/packages
+
+jobs:
+  build-and-pack:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup-env
+
+      - name: Restore dependencies
+        run: dotnet restore Ling.Audit.sln
+
+      - name: Build
+        run: dotnet build Ling.Audit.sln --configuration Release --no-restore -p:ContinuousIntegrationBuild=true
+
+      - name: Verify NuGet packages can be created
+        shell: bash
+        run: |
+          for project in \
+            src/Ling.Audit/Ling.Audit.csproj \
+            src/Ling.Audit.EntityFrameworkCore/Ling.Audit.EntityFrameworkCore.csproj \
+            src/Ling.Audit.AspNetCore/Ling.Audit.AspNetCore.csproj
+          do
+            dotnet pack "$project" --configuration Release --no-build --no-restore \
+              --output "$NUGET_DIRECTORY" -p:ContinuousIntegrationBuild=true
+          done
+
+      - name: Verify package boundaries
+        shell: bash
+        run: |
+          core=$(find "$NUGET_DIRECTORY" -maxdepth 1 -name 'Ling.Audit.*.nupkg' \
+            ! -name '*.EntityFrameworkCore.*' ! -name '*.AspNetCore.*' ! -name '*.snupkg' -print -quit)
+          efcore=$(find "$NUGET_DIRECTORY" -maxdepth 1 -name 'Ling.Audit.EntityFrameworkCore.*.nupkg' \
+            ! -name '*.snupkg' -print -quit)
+          aspnetcore=$(find "$NUGET_DIRECTORY" -maxdepth 1 -name 'Ling.Audit.AspNetCore.*.nupkg' \
+            ! -name '*.snupkg' -print -quit)
+
+          test -n "$core"
+          test -n "$efcore"
+          test -n "$aspnetcore"
+
+          unzip -Z1 "$core" | grep -Fx 'analyzers/dotnet/cs/Ling.Audit.SourceGenerators.dll'
+          unzip -Z1 "$core" | grep -Fx 'lib/netstandard2.0/Ling.Audit.dll'
+          unzip -Z1 "$efcore" | grep -Fx 'lib/net6.0/Ling.Audit.EntityFrameworkCore.dll'
+          unzip -Z1 "$efcore" | grep -Fx 'lib/net9.0/Ling.Audit.EntityFrameworkCore.dll'
+          unzip -Z1 "$aspnetcore" | grep -Fx 'lib/net6.0/Ling.Audit.AspNetCore.dll'
+          unzip -Z1 "$aspnetcore" | grep -Fx 'lib/net9.0/Ling.Audit.AspNetCore.dll'
+
+      - name: Verify package consumption
+        run: |
+          dotnet restore tests/Ling.Audit.PackageConsumer/Ling.Audit.PackageConsumer.csproj \
+            --configfile tests/Ling.Audit.PackageConsumer/NuGet.config
+          dotnet build tests/Ling.Audit.PackageConsumer/Ling.Audit.PackageConsumer.csproj \
+            --configuration Release --no-restore
+
+  compatibility-test:
+    permissions:
+      contents: read
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup-env
+        with:
+          dotnet-version: |
+            3.1.x
+            5.0.x
+            6.0.x
+            7.0.x
+            8.0.x
+            9.0.x
+            10.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore Ling.Audit.sln
+
+      - name: Build
+        run: dotnet build Ling.Audit.sln --configuration Release --no-restore -p:ContinuousIntegrationBuild=true
+
+      - name: Run tests on their target runtimes
+        run: dotnet test Ling.Audit.sln --configuration Release --no-build --no-restore --verbosity normal

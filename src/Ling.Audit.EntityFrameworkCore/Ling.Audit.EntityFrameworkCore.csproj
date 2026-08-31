@@ -4,10 +4,23 @@
     <TargetFrameworks>net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);IDE0130</NoWarn>
+    <PackageId>Ling.Audit.EntityFrameworkCore</PackageId>
+    <Description>Entity Framework Core integration for Ling.Audit.</Description>
+    <PackageTags>ling;audit;entity-framework-core;soft-delete</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/ling921/ling-audit</RepositoryUrl>
+    <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Ling.Audit" Version="2.0.1" />
+    <ProjectReference Include="..\Ling.Audit\Ling.Audit.csproj" PrivateAssets="none" IncludeAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="" />
+    <None Include="..\..\assets\icon.png" Pack="true" PackagePath="" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">

@@ -65,4 +65,15 @@ public static class DbContextOptionsBuilderExtensions
 
         return builder;
     }
+
+    /// <summary>
+    /// Configures the time provider used for audit timestamps.
+    /// </summary>
+    public static DbContextOptionsBuilder UseAuditTimeProvider<TTimeProvider>(this DbContextOptionsBuilder builder)
+        where TTimeProvider : class, IAuditTimeProvider
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        builder.ReplaceService<IAuditTimeProvider, TTimeProvider>();
+        return builder;
+    }
 }
