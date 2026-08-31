@@ -169,7 +169,11 @@ public sealed class AuditIntegrationTests
             modelBuilder.Entity<TestEntity>(builder =>
             {
                 builder.HasKey(x => x.Id);
+#if NET10_0_OR_GREATER
+                builder.HasQueryFilter("TenantFilter", x => x.TenantId == 1);
+#else
                 builder.HasQueryFilter(x => x.TenantId == 1);
+#endif
             });
             modelBuilder.Entity<AnonymousEntity>().HasKey(x => x.Id);
         }

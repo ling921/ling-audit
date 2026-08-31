@@ -10,7 +10,7 @@ This package applies audit metadata during `SaveChanges`, maintains creation, mo
 dotnet add package Ling.Audit.EntityFrameworkCore
 ```
 
-The package targets .NET 6.0 through .NET 9.0 and uses the matching EF Core major version.
+The package targets .NET 6.0 through .NET 10.0 and uses the matching EF Core major version.
 
 ## Quick start
 

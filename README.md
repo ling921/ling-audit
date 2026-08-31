@@ -8,9 +8,9 @@ English | [简体中文](README.zh-CN.md)
 
 | Package | Purpose | Target frameworks |
 | --- | --- | --- |
-| [`Ling.Audit`](https://www.nuget.org/packages/Ling.Audit/) [![NuGet](https://img.shields.io/nuget/v/Ling.Audit.svg)](https://www.nuget.org/packages/Ling.Audit/) | Audit contracts, source generator, analyzers, and code fixes. | .NET Standard 2.0/2.1, .NET Core 3.1, .NET 5–9 |
-| [`Ling.Audit.EntityFrameworkCore`](https://www.nuget.org/packages/Ling.Audit.EntityFrameworkCore/) [![NuGet](https://img.shields.io/nuget/v/Ling.Audit.EntityFrameworkCore.svg)](https://www.nuget.org/packages/Ling.Audit.EntityFrameworkCore/) | Audit-property maintenance, soft deletion, and entity/field change logs. | .NET 6–9 |
-| [`Ling.Audit.AspNetCore`](https://www.nuget.org/packages/Ling.Audit.AspNetCore/) [![NuGet](https://img.shields.io/nuget/v/Ling.Audit.AspNetCore.svg)](https://www.nuget.org/packages/Ling.Audit.AspNetCore/) | User, IP address, and client information from the current HTTP request. | .NET 6–9 |
+| [`Ling.Audit`](https://www.nuget.org/packages/Ling.Audit/) [![NuGet](https://img.shields.io/nuget/v/Ling.Audit.svg)](https://www.nuget.org/packages/Ling.Audit/) | Audit contracts, source generator, analyzers, and code fixes. | .NET Standard 2.0 |
+| [`Ling.Audit.EntityFrameworkCore`](https://www.nuget.org/packages/Ling.Audit.EntityFrameworkCore/) [![NuGet](https://img.shields.io/nuget/v/Ling.Audit.EntityFrameworkCore.svg)](https://www.nuget.org/packages/Ling.Audit.EntityFrameworkCore/) | Audit-property maintenance, soft deletion, and entity/field change logs. | .NET 6–10 |
+| [`Ling.Audit.AspNetCore`](https://www.nuget.org/packages/Ling.Audit.AspNetCore/) [![NuGet](https://img.shields.io/nuget/v/Ling.Audit.AspNetCore.svg)](https://www.nuget.org/packages/Ling.Audit.AspNetCore/) | User, IP address, and client information from the current HTTP request. | .NET 6–10 |
 
 The EF Core and ASP.NET Core packages reference the matching EF Core major version for each target framework.
 
@@ -32,7 +32,7 @@ The EF Core and ASP.NET Core packages reference the matching EF Core major versi
 Install the core package in the project that owns the entity types:
 
 ```shell
-dotnet add package Ling.Audit --version 2.0.1
+dotnet add package Ling.Audit --version 2.1.0
 ```
 
 Implement the audit interface that matches the entity lifecycle. The type and every containing type must be `partial`:
@@ -85,7 +85,7 @@ Use a basic interface for one value, or a composite interface for a complete lif
 Install the integration that matches the application's target framework:
 
 ```shell
-dotnet add package Ling.Audit.EntityFrameworkCore --version 2.0.1
+dotnet add package Ling.Audit.EntityFrameworkCore --version 2.1.0
 ```
 
 Create a provider for the current user and client context:
@@ -198,7 +198,7 @@ Global behavior can be changed with `AuditOptions.AllowAnonymous`, or customized
 For applications whose audit user ID is a string claim, install the ASP.NET Core package instead of configuring an EF user provider manually:
 
 ```shell
-dotnet add package Ling.Audit.AspNetCore --version 2.0.1
+dotnet add package Ling.Audit.AspNetCore --version 2.1.0
 ```
 
 ```csharp
@@ -291,7 +291,7 @@ dotnet build Ling.Audit.sln -c Release
 dotnet test Ling.Audit.sln -c Release
 ```
 
-The test matrix runs the EF Core and ASP.NET Core integration suites against .NET 6, 7, 8, and 9. Pull requests that change behavior should include corresponding tests.
+The test matrix runs the EF Core and ASP.NET Core integration suites against .NET 6, 7, 8, 9, and 10. Pull requests that change behavior should include corresponding tests.
 
 ## License
 
