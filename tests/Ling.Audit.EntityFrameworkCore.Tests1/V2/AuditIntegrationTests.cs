@@ -1,8 +1,8 @@
+using System.Text.Json;
 using Ling.Audit;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using System.Text.Json;
 
 namespace Ling.Audit.EntityFrameworkCore.Tests;
 

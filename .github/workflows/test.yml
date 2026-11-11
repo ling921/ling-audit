@@ -72,9 +72,11 @@ jobs:
           unzip -Z1 "$efcore" | grep -Fx 'lib/net6.0/Ling.Audit.EntityFrameworkCore.dll'
           unzip -Z1 "$efcore" | grep -Fx 'lib/net9.0/Ling.Audit.EntityFrameworkCore.dll'
           unzip -Z1 "$efcore" | grep -Fx 'lib/net10.0/Ling.Audit.EntityFrameworkCore.dll'
+          unzip -Z1 "$efcore" | grep -Fx 'lib/net11.0/Ling.Audit.EntityFrameworkCore.dll'
           unzip -Z1 "$aspnetcore" | grep -Fx 'lib/net6.0/Ling.Audit.AspNetCore.dll'
           unzip -Z1 "$aspnetcore" | grep -Fx 'lib/net9.0/Ling.Audit.AspNetCore.dll'
           unzip -Z1 "$aspnetcore" | grep -Fx 'lib/net10.0/Ling.Audit.AspNetCore.dll'
+          unzip -Z1 "$aspnetcore" | grep -Fx 'lib/net11.0/Ling.Audit.AspNetCore.dll'
 
       - name: Verify package consumption
         run: |
@@ -105,6 +107,7 @@ jobs:
             8.0.x
             9.0.x
             10.0.x
+            11.0.x
 
       - name: Restore dependencies
         run: dotnet restore Ling.Audit.sln

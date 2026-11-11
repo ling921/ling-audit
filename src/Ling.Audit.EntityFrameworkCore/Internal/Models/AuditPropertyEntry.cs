@@ -1,4 +1,4 @@
-﻿namespace Ling.Audit.EntityFrameworkCore.Internal.Models;
+namespace Ling.Audit.EntityFrameworkCore.Internal.Models;
 
 /// <summary>
 /// Represents temporary tracking information for a property change during auditing.

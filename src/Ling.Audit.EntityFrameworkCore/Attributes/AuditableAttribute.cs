@@ -1,4 +1,4 @@
-﻿namespace Ling.Audit.EntityFrameworkCore;
+namespace Ling.Audit.EntityFrameworkCore;
 
 /// <summary>
 /// Marks an entity class as requiring audit logging.

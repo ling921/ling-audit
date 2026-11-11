@@ -1,4 +1,4 @@
-﻿using Ling.Audit.EntityFrameworkCore.Internal;
+using Ling.Audit.EntityFrameworkCore.Internal;
 using Ling.Audit.EntityFrameworkCore.Internal.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;

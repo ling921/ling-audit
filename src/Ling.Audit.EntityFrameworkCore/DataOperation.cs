@@ -1,4 +1,4 @@
-﻿namespace Ling.Audit.EntityFrameworkCore;
+namespace Ling.Audit.EntityFrameworkCore;
 
 /// <summary>
 /// Specifies fundamental data manipulation operations, typically corresponding to CUD actions.

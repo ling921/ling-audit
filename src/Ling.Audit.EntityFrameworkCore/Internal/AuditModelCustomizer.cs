@@ -1,4 +1,4 @@
-﻿using Ling.Audit.EntityFrameworkCore.Internal.Extensions;
+using Ling.Audit.EntityFrameworkCore.Internal.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -58,10 +58,10 @@ internal sealed class AuditModelCustomizer<TUserId> : ModelCustomizer
             builder.ToTable(nameof(AuditEntityChangeLog<TUserId>), t => t.HasComment("Table to record changes in entities."))
                    .HasKey(al => al.Id);
 #else
-        builder.ToTable(nameof(AuditEntityChangeLog<TUserId>))
-               .HasComment("Table to record changes in entities.");
+            builder.ToTable(nameof(AuditEntityChangeLog<TUserId>))
+                   .HasComment("Table to record changes in entities.");
 
-        builder.HasKey(al => al.Id);
+            builder.HasKey(al => al.Id);
 #endif
 
             builder.Property(al => al.Id)
@@ -144,10 +144,10 @@ internal sealed class AuditModelCustomizer<TUserId> : ModelCustomizer
             builder.ToTable(nameof(AuditFieldChangeLog), t => t.HasComment("Table to record changes in entity fields."))
                    .HasKey(al => al.Id);
 #else
-        builder.ToTable(nameof(AuditFieldChangeLog))
-               .HasComment("Table to record changes in entity fields.");
+            builder.ToTable(nameof(AuditFieldChangeLog))
+                   .HasComment("Table to record changes in entity fields.");
 
-        builder.HasKey(al => al.Id);
+            builder.HasKey(al => al.Id);
 #endif
 
             builder.Property(al => al.Id)

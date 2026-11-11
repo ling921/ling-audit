@@ -1,4 +1,6 @@
-﻿using Ling.Audit.EntityFrameworkCore.Internal;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
+using Ling.Audit.EntityFrameworkCore.Internal;
 using Ling.Audit.EntityFrameworkCore.Internal.Extensions;
 using Ling.Audit.EntityFrameworkCore.Internal.Models;
 using Microsoft.EntityFrameworkCore;
@@ -6,8 +8,6 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.Extensions.Logging;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
 
 namespace Ling.Audit.EntityFrameworkCore;
 

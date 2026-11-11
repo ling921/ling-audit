@@ -9,8 +9,8 @@
 | 包 | 用途 | 目标框架 |
 | --- | --- | --- |
 | [`Ling.Audit`](https://www.nuget.org/packages/Ling.Audit/) [![NuGet](https://img.shields.io/nuget/v/Ling.Audit.svg)](https://www.nuget.org/packages/Ling.Audit/) | 审计契约、源代码生成器、Analyzer 和 Code Fix。 | .NET Standard 2.0 |
-| [`Ling.Audit.EntityFrameworkCore`](https://www.nuget.org/packages/Ling.Audit.EntityFrameworkCore/) [![NuGet](https://img.shields.io/nuget/v/Ling.Audit.EntityFrameworkCore.svg)](https://www.nuget.org/packages/Ling.Audit.EntityFrameworkCore/) | 审计属性维护、软删除以及实体/字段变更日志。 | .NET 6–10 |
-| [`Ling.Audit.AspNetCore`](https://www.nuget.org/packages/Ling.Audit.AspNetCore/) [![NuGet](https://img.shields.io/nuget/v/Ling.Audit.AspNetCore.svg)](https://www.nuget.org/packages/Ling.Audit.AspNetCore/) | 从当前 HTTP 请求获取用户、IP 地址和客户端信息。 | .NET 6–10 |
+| [`Ling.Audit.EntityFrameworkCore`](https://www.nuget.org/packages/Ling.Audit.EntityFrameworkCore/) [![NuGet](https://img.shields.io/nuget/v/Ling.Audit.EntityFrameworkCore.svg)](https://www.nuget.org/packages/Ling.Audit.EntityFrameworkCore/) | 审计属性维护、软删除以及实体/字段变更日志。 | .NET 6–11 |
+| [`Ling.Audit.AspNetCore`](https://www.nuget.org/packages/Ling.Audit.AspNetCore/) [![NuGet](https://img.shields.io/nuget/v/Ling.Audit.AspNetCore.svg)](https://www.nuget.org/packages/Ling.Audit.AspNetCore/) | 从当前 HTTP 请求获取用户、IP 地址和客户端信息。 | .NET 6–11 |
 
 EF Core 与 ASP.NET Core 包会为每个目标框架引用对应主版本的 EF Core。
 
@@ -32,7 +32,7 @@ EF Core 与 ASP.NET Core 包会为每个目标框架引用对应主版本的 EF 
 在定义实体的项目中安装核心包：
 
 ```shell
-dotnet add package Ling.Audit --version 2.1.0
+dotnet add package Ling.Audit --version 2.2.0
 ```
 
 根据实体生命周期实现相应审计接口。实体类型及其所有包含类型都必须是 `partial`：

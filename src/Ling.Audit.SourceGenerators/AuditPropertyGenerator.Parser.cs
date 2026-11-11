@@ -1,8 +1,8 @@
+using System.Text;
 using Ling.Audit.SourceGenerators.Helpers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Text;
 
 namespace Ling.Audit.SourceGenerators;
 

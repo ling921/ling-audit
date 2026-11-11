@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 
 namespace Ling.Audit.EntityFrameworkCore.Internal.Extensions;
 

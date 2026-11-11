@@ -1,10 +1,10 @@
+using System.Collections.Immutable;
 using Ling.Audit.SourceGenerators.Diagnostics;
 using Ling.Audit.SourceGenerators.Helpers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
-using System.Collections.Immutable;
 
 namespace Ling.Audit.SourceGenerators.Analyzers;
 
@@ -253,7 +253,7 @@ internal class MustNullAttributeAnalyzer : DiagnosticAnalyzer
                 if (argument is not ITypeParameterSymbol && !argument.CanAssignNull())
                 {
                     var diagnostic = Diagnostic.Create(
-                        argumentSyntax is TypeSyntax 
+                        argumentSyntax is TypeSyntax
                             ? DiagnosticDescriptors.TypeParameterMustBeNullable
                             : DiagnosticDescriptors.ParameterTypeMustBeNullable,
                         argumentSyntax.GetLocation(),

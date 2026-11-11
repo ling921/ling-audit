@@ -1,5 +1,5 @@
-using Ling.Audit.SourceGenerators.Helpers;
 using System.Collections.Immutable;
+using Ling.Audit.SourceGenerators.Helpers;
 using Xunit;
 
 namespace Ling.Audit.SourceGenerators.Tests.Helpers;

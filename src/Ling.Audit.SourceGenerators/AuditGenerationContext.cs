@@ -1,4 +1,4 @@
-﻿using Ling.Audit.SourceGenerators.Helpers;
+using Ling.Audit.SourceGenerators.Helpers;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Ling.Audit.SourceGenerators;

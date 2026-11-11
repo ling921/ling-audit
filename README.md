@@ -9,8 +9,8 @@ English | [简体中文](README.zh-CN.md)
 | Package | Purpose | Target frameworks |
 | --- | --- | --- |
 | [`Ling.Audit`](https://www.nuget.org/packages/Ling.Audit/) [![NuGet](https://img.shields.io/nuget/v/Ling.Audit.svg)](https://www.nuget.org/packages/Ling.Audit/) | Audit contracts, source generator, analyzers, and code fixes. | .NET Standard 2.0 |
-| [`Ling.Audit.EntityFrameworkCore`](https://www.nuget.org/packages/Ling.Audit.EntityFrameworkCore/) [![NuGet](https://img.shields.io/nuget/v/Ling.Audit.EntityFrameworkCore.svg)](https://www.nuget.org/packages/Ling.Audit.EntityFrameworkCore/) | Audit-property maintenance, soft deletion, and entity/field change logs. | .NET 6–10 |
-| [`Ling.Audit.AspNetCore`](https://www.nuget.org/packages/Ling.Audit.AspNetCore/) [![NuGet](https://img.shields.io/nuget/v/Ling.Audit.AspNetCore.svg)](https://www.nuget.org/packages/Ling.Audit.AspNetCore/) | User, IP address, and client information from the current HTTP request. | .NET 6–10 |
+| [`Ling.Audit.EntityFrameworkCore`](https://www.nuget.org/packages/Ling.Audit.EntityFrameworkCore/) [![NuGet](https://img.shields.io/nuget/v/Ling.Audit.EntityFrameworkCore.svg)](https://www.nuget.org/packages/Ling.Audit.EntityFrameworkCore/) | Audit-property maintenance, soft deletion, and entity/field change logs. | .NET 6–11 |
+| [`Ling.Audit.AspNetCore`](https://www.nuget.org/packages/Ling.Audit.AspNetCore/) [![NuGet](https://img.shields.io/nuget/v/Ling.Audit.AspNetCore.svg)](https://www.nuget.org/packages/Ling.Audit.AspNetCore/) | User, IP address, and client information from the current HTTP request. | .NET 6–11 |
 
 The EF Core and ASP.NET Core packages reference the matching EF Core major version for each target framework.
 
@@ -32,7 +32,7 @@ The EF Core and ASP.NET Core packages reference the matching EF Core major versi
 Install the core package in the project that owns the entity types:
 
 ```shell
-dotnet add package Ling.Audit --version 2.1.0
+dotnet add package Ling.Audit --version 2.2.0
 ```
 
 Implement the audit interface that matches the entity lifecycle. The type and every containing type must be `partial`:
