@@ -1,10 +1,10 @@
+using System.Collections.Immutable;
 using Ling.Audit.SourceGenerators.Diagnostics;
 using Ling.Audit.SourceGenerators.Helpers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
-using System.Collections.Immutable;
 
 namespace Ling.Audit.SourceGenerators.Analyzers;
 

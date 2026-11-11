@@ -1,4 +1,4 @@
-﻿namespace Ling.Audit;
+namespace Ling.Audit;
 
 /// <summary>
 /// Marks a generic parameter as nullable.

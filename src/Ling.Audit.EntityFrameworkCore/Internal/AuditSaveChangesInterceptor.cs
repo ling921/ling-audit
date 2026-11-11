@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using Ling.Audit.EntityFrameworkCore.Internal.Extensions;
 using Ling.Audit.EntityFrameworkCore.Internal.Models;
 using Microsoft.EntityFrameworkCore;
@@ -5,8 +7,6 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Logging;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 
 namespace Ling.Audit.EntityFrameworkCore.Internal;
 

@@ -1,7 +1,7 @@
 using System.Security.Claims;
+using Ling.Audit.AspNetCore;
 using Ling.Audit.EntityFrameworkCore;
 using Ling.Audit.Sample.Contracts;
-using Ling.Audit.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);

@@ -1,8 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Reflection;
 using Ling.Audit.EntityFrameworkCore.Internal.Models;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions.Infrastructure;
-using System.Reflection;
 
 namespace Ling.Audit.EntityFrameworkCore.Internal;
 

@@ -1,4 +1,4 @@
-﻿namespace Ling.Audit.EntityFrameworkCore;
+namespace Ling.Audit.EntityFrameworkCore;
 
 /// <summary>
 /// Define the audit configuration items.

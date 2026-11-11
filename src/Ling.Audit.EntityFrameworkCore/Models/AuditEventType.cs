@@ -1,4 +1,4 @@
-﻿namespace Ling.Audit.EntityFrameworkCore;
+namespace Ling.Audit.EntityFrameworkCore;
 
 /// <summary>
 /// Enum that specifies audit event type.

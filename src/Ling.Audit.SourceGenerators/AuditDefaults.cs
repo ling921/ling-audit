@@ -1,4 +1,4 @@
-﻿namespace Ling.Audit.SourceGenerators;
+namespace Ling.Audit.SourceGenerators;
 
 internal static class AuditDefaults
 {

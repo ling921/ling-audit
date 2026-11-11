@@ -1,4 +1,4 @@
-﻿namespace Ling.Audit;
+namespace Ling.Audit;
 
 /// <summary>
 /// Defines an object that tracks creator information.

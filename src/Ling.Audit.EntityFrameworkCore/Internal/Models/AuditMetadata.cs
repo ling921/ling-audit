@@ -1,4 +1,4 @@
-﻿namespace Ling.Audit.EntityFrameworkCore.Internal.Models;
+namespace Ling.Audit.EntityFrameworkCore.Internal.Models;
 
 /// <summary>
 /// Represents audit metadata for an entity type.
