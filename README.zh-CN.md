@@ -32,7 +32,7 @@ EF Core 与 ASP.NET Core 包会为每个目标框架引用对应主版本的 EF 
 在定义实体的项目中安装核心包：
 
 ```shell
-dotnet add package Ling.Audit --version 2.2.1
+dotnet add package Ling.Audit --version 2.2.2
 ```
 
 根据实体生命周期实现相应审计接口。实体类型及其所有包含类型都必须是 `partial`：

@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <VersionPrefix>2.2.1</VersionPrefix>
+    <VersionPrefix>2.2.2</VersionPrefix>
     <VersionSuffix></VersionSuffix>
     <Authors>ling921</Authors>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
