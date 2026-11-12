@@ -69,6 +69,7 @@ jobs:
 
           unzip -Z1 "$core" | grep -Fx 'analyzers/dotnet/cs/Ling.Audit.SourceGenerators.dll'
           unzip -Z1 "$core" | grep -Fx 'lib/netstandard2.0/Ling.Audit.dll'
+          unzip -Z1 "$core" | grep -Fx 'lib/net8.0/Ling.Audit.dll'
           unzip -Z1 "$efcore" | grep -Fx 'lib/net6.0/Ling.Audit.EntityFrameworkCore.dll'
           unzip -Z1 "$efcore" | grep -Fx 'lib/net9.0/Ling.Audit.EntityFrameworkCore.dll'
           unzip -Z1 "$efcore" | grep -Fx 'lib/net10.0/Ling.Audit.EntityFrameworkCore.dll'
@@ -84,6 +85,11 @@ jobs:
             --configfile tests/Ling.Audit.PackageConsumer/NuGet.config
           dotnet build tests/Ling.Audit.PackageConsumer/Ling.Audit.PackageConsumer.csproj \
             --configuration Release --no-restore
+
+      - name: Verify Native AOT publish and execution for Ling.Audit
+        run: |
+          dotnet publish tests/Ling.Audit.NativeAotSmoke/Ling.Audit.NativeAotSmoke.csproj --configuration Release --runtime linux-x64 --self-contained true -warnaserror
+          ./tests/Ling.Audit.NativeAotSmoke/bin/Release/net11.0/linux-x64/publish/Ling.Audit.NativeAotSmoke
 
   compatibility-test:
     permissions:

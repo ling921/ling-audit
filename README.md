@@ -32,7 +32,7 @@ The EF Core and ASP.NET Core packages reference the matching EF Core major versi
 Install the core package in the project that owns the entity types:
 
 ```shell
-dotnet add package Ling.Audit --version 2.2.1
+dotnet add package Ling.Audit --version 2.2.2
 ```
 
 Implement the audit interface that matches the entity lifecycle. The type and every containing type must be `partial`:

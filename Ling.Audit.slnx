@@ -24,5 +24,6 @@
     <Project Path="tests/Ling.Audit.AspNetCore.Tests/Ling.Audit.AspNetCore.Tests.csproj" />
     <Project Path="tests/Ling.Audit.EntityFrameworkCore.Tests1/Ling.Audit.EntityFrameworkCore.Tests.csproj" />
     <Project Path="tests/Ling.Audit.SourceGenerators.Tests/Ling.Audit.SourceGenerators.Tests.csproj" />
+    <Project Path="tests/Ling.Audit.NativeAotSmoke/Ling.Audit.NativeAotSmoke.csproj" />
   </Folder>
 </Solution>
