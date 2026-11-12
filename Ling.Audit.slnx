@@ -1,0 +1,28 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/git/">
+    <File Path=".gitignore" />
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/Ling.Audit.Sample.Contracts/Ling.Audit.Sample.Contracts.csproj" />
+    <Project Path="samples/Ling.Audit.Sample/Ling.Audit.Sample.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <File Path="src/Directory.Build.props" />
+    <Project Path="src/Ling.Audit.AspNetCore/Ling.Audit.AspNetCore.csproj" />
+    <Project Path="src/Ling.Audit.EntityFrameworkCore/Ling.Audit.EntityFrameworkCore.csproj" />
+    <Project Path="src/Ling.Audit.SourceGenerators/Ling.Audit.SourceGenerators.csproj" />
+    <Project Path="src/Ling.Audit/Ling.Audit.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Ling.Audit.AspNetCore.Tests/Ling.Audit.AspNetCore.Tests.csproj" />
+    <Project Path="tests/Ling.Audit.EntityFrameworkCore.Tests1/Ling.Audit.EntityFrameworkCore.Tests.csproj" />
+    <Project Path="tests/Ling.Audit.SourceGenerators.Tests/Ling.Audit.SourceGenerators.Tests.csproj" />
+  </Folder>
+</Solution>

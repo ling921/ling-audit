@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Ling.Audit.AspNetCore" Version="2.2.0" />
+    <PackageReference Include="Ling.Audit.AspNetCore" Version="2.2.1" />
   </ItemGroup>
 
 </Project>
